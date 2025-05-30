@@ -2,26 +2,52 @@ package main
 
 import (
 	"fmt"
+	"github.com/eiannone/keyboard"
 	"math/rand"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/eiannone/keyboard"
 	"github.com/fatih/color"
 	"github.com/inancgumus/screen"
 )
 
+type block struct {
+	id        int
+	typeId    int
+	isFalling bool
+	isNotNone bool
+	direction rune // 상t하b좌l우r
+}
+
+var noneBlock block = block{0, 0, false, false, 't'}
+var globalBlockId = 1
+
+func createBlock(typeId int) block {
+	b := block{0, typeId, true, true, 't'}
+	return b
+}
+
+var blockColorMap = map[int]*color.Color{
+	0: color.New(color.BgBlack),
+	1: color.New(color.BgCyan),
+	2: color.New(color.BgHiRed),
+	3: color.New(color.BgMagenta),
+	4: color.New(color.BgYellow),
+	5: color.New(color.BgBlue),
+	6: color.New(color.BgGreen),
+	7: color.New(color.BgRed),
+}
+
+var blockShapeList [7][4][4]block
+
 var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-var ground [4][4][2]int
+var ground [22][12]block
 
 func main() {
-
-	// init
-	for range 2 {
-		setGroundWithRND()
-	}
+	initEnv()
+	setGround(0, 0, globalBlockId, 1)
+	globalBlockId++
 
 	printArray(ground)
 
@@ -40,10 +66,8 @@ func main() {
 			break
 		}
 		move(ch)
+		fallingDown()
 		printArray(ground)
-		if gameOver(ground) {
-			break
-		}
 	}
 }
 
@@ -58,186 +82,114 @@ func centerAlignNumber(n int, width int) string {
 	return strings.Repeat(" ", left) + s + strings.Repeat(" ", right)
 }
 
-func printArray(a [4][4][2]int) {
+func printArray(a [22][12]block) {
 	screen.Clear()
 	fmt.Println()
-	var colorFunc [4]*color.Color
 	for _, i := range a {
-		for idx, j := range i {
-			colorFunc[idx] = color.New(color.FgWhite)
-
-			switch j[0] {
-			case 2:
-				colorFunc[idx] = color.BgRGB(57, 42, 26)
-			case 4:
-				colorFunc[idx] = color.BgRGB(71, 42, 22)
-			case 8:
-				colorFunc[idx] = color.BgRGB(127, 65, 11)
-			case 16:
-				colorFunc[idx] = color.BgRGB(141, 54, 8)
-			case 32:
-				colorFunc[idx] = color.BgRGB(145, 33, 7)
-			case 64:
-				colorFunc[idx] = color.BgRGB(167, 37, 7)
-			case 128:
-				colorFunc[idx] = color.BgRGB(97, 77, 12)
-			case 256:
-				colorFunc[idx] = color.BgRGB(75, 83, 12)
-			case 512:
-				colorFunc[idx] = color.BgRGB(113, 90, 12)
-			case 1024:
-				colorFunc[idx] = color.BgRGB(131, 96, 11)
-			case 2048:
-				colorFunc[idx] = color.BgRGB(129, 103, 11)
-			}
-		}
-		for k := range 4 {
-			fmt.Print(colorFunc[k].SprintFunc()("       "))
-		}
-		fmt.Println()
-		for k := range 4 {
-			fmt.Print(colorFunc[k].SprintFunc()(centerAlignNumber(i[k][0], 7)))
-		}
-		fmt.Println()
-		for k := range 4 {
-			fmt.Print(colorFunc[k].SprintFunc()("       "))
-		}
-		fmt.Print("\n")
-	}
-	for i := range 4 {
-		for j := range 4 {
-			ground[i][j][1] = 0
-		}
-	}
-
-}
-
-func setGround(i int, j int, val int) {
-	if ground[i][j][0] != 0 {
-		setGround(seededRand.Intn(4), seededRand.Intn(4), val)
-		return
-	}
-	ground[i][j][0] = val
-}
-
-func setGroundWithRND() {
-	var count int
-OUTFOR:
-	for _, i := range ground {
 		for _, j := range i {
-			if j[0] == 0 {
-				count++
-				break OUTFOR
+			_, _ = blockColorMap[j.typeId].Print("  ")
+
+		}
+		fmt.Println()
+	}
+
+}
+
+func setGround(i int, j int, id int, blockType int) {
+	for iP := range 4 {
+		for jP := range 4 {
+			ground[i+iP][j+jP] = blockShapeList[blockType-1][iP][jP]
+			ground[i+iP][j+jP].id = id
+		}
+	}
+}
+
+func fallingDown() {
+	for i := range 22 {
+		for j := range 12 {
+			blockPtr := &ground[21-i][11-j]
+			if blockPtr.typeId > 0 && blockPtr.isFalling {
+				tmp := *blockPtr
+				if 21-i == 0 {
+					*blockPtr = noneBlock
+				} else {
+					*blockPtr = ground[21-i-1][11-j]
+				}
+				if 21-i+1 == 22 {
+					setBlocksIsFallingFalse(blockPtr.id)
+				} else {
+					ground[21-i+1][11-j] = tmp
+				}
 			}
 		}
 	}
-	if count == 0 {
-		os.Exit(0)
-		return
-	}
-	randN := seededRand.Intn(11)
-	if randN <= 9 {
-		setGround(seededRand.Intn(4), seededRand.Intn(4), 2)
-	} else {
-		setGround(seededRand.Intn(4), seededRand.Intn(4), 4)
+}
+
+// 해당 블럭의 가장 왼쪽(j), 가장 위쪽(i)
+func setBlocksIsFallingFalse(blockId int) {
+	count := 0
+	for i := range 22 {
+		for j := range 12 {
+			if ground[21-i][11-j].id == blockId {
+				ground[21-i][11-j].isFalling = false
+				count++
+			}
+			if count == 4 {
+				return
+			}
+		}
 	}
 }
 
 func move(q rune) {
-	var moveToI int
-	var moveToJ int
-	switch q {
-	case 'w':
-		moveToI = -1
-	case 's':
-		moveToI = 1
-	case 'd':
-		moveToJ = 1
-	case 'a':
-		moveToJ = -1
-	}
-	var count int
-	var changed [4][4][2]int = ground
-
-	for x := range 4 {
-		for y := range 4 {
-			switch {
-			case moveToI == -1 && ground[y][x][0] != 0:
-				changed = moveTo(y, x, moveToI, moveToJ, ground)
-			case moveToI == 1 && ground[3-y][x][0] != 0:
-				changed = moveTo(3-y, x, moveToI, moveToJ, ground)
-			case moveToJ == -1 && ground[x][y][0] != 0:
-				changed = moveTo(x, y, moveToI, moveToJ, ground)
-			case moveToJ == 1 && ground[x][3-y][0] != 0:
-				changed = moveTo(x, 3-y, moveToI, moveToJ, ground)
-			}
-
-			if ground != changed {
-				ground = changed
-				count++
-			}
-
-		}
-	}
-	if count > 0 {
-		setGroundWithRND()
-	}
 }
 
-func moveTo(i int, j int, moveToI int, moveToJ int, ground [4][4][2]int) [4][4][2]int {
-	from := ground[i][j]
-	ground[i][j][0] = 0
-	for !((i == 0 && moveToI == -1) || (i == 3 && moveToI == 1) || (j == 0 && moveToJ == -1) || (j == 3 && moveToJ == 1)) {
-		if ground[i+moveToI][j+moveToJ][0] == 0 {
-			i += moveToI
-			j += moveToJ
-		} else if ground[i+moveToI][j+moveToJ] == from && from[1] != 1 {
-			from[0] = from[0] + from[0]
-			i += moveToI
-			j += moveToJ
-			ground[i][j][0] = 0
-			from[1] = 1
-
-		} else {
-			break
-		}
+func initEnv() {
+	color.NoColor = false
+	// I자 블록 (1)
+	blockShapeList[0] = [4][4]block{
+		{createBlock(1)},
+		{createBlock(1)},
+		{createBlock(1)},
+		{createBlock(1)},
 	}
-	ground[i][j] = from
-	return ground
-}
 
-func gameOver(ground [4][4][2]int) bool {
-	clone := ground
-	b := true
-	for i := range 4 {
-		for j := range 4 {
-			if ground[i][j][0] == 0 {
-				b = false
-				goto RETURN
-			}
-			if clone == moveTo(i, j, 1, 0, clone) {
-				if clone == moveTo(i, j, -1, 0, clone) {
-					if clone == moveTo(i, j, 0, 1, clone) {
-						if clone == moveTo(i, j, 0, -1, clone) {
-							b = true
-						} else {
-							b = false
-							goto RETURN
-						}
-					} else {
-						b = false
-						goto RETURN
-					}
-				} else {
-					b = false
-					goto RETURN
-				}
-			} else {
-				b = false
-				goto RETURN
-			}
-		}
+	// L자 블록 (2)
+	blockShapeList[1] = [4][4]block{
+		{createBlock(2)},
+		{createBlock(2)},
+		{createBlock(2), createBlock(2)},
 	}
-RETURN:
-	return b
+
+	// T자 블록 (3)
+	blockShapeList[2] = [4][4]block{
+		{noneBlock, createBlock(3)},
+		{createBlock(3), createBlock(3)},
+		{createBlock(3)},
+	}
+
+	// 정사각형 블록 (4)
+	blockShapeList[3] = [4][4]block{
+		{createBlock(4), createBlock(4)},
+		{createBlock(4), createBlock(4)},
+	}
+
+	// J자 블록 (5)
+	blockShapeList[4] = [4][4]block{
+		{noneBlock, createBlock(5)},
+		{noneBlock, createBlock(5)},
+		{createBlock(5), createBlock(5)},
+	}
+
+	// S자 블록 (6)
+	blockShapeList[5] = [4][4]block{
+		{noneBlock, createBlock(6), createBlock(6)},
+		{createBlock(6), createBlock(6)},
+	}
+
+	// Z자 블록 (7)
+	blockShapeList[6] = [4][4]block{
+		{createBlock(7), createBlock(7)},
+		{noneBlock, createBlock(7), createBlock(7)},
+	}
 }

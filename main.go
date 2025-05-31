@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/eiannone/keyboard"
+	"github.com/inancgumus/screen"
 	"math/rand"
-	"strings"
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/inancgumus/screen"
 )
 
 type block struct {
@@ -19,8 +18,18 @@ type block struct {
 	direction rune // 상t하b좌l우r
 }
 
+type blockInfo struct {
+	id        int
+	i         int
+	j         int
+	blockType int
+}
+
+// 해당 블럭의 가장 왼쪽(j), 가장 위쪽(i)
+
 var noneBlock block = block{0, 0, false, false, 't'}
 var globalBlockId = 1
+var fallingBlock blockInfo
 
 func createBlock(typeId int) block {
 	b := block{0, typeId, true, true, 't'}
@@ -46,7 +55,7 @@ var ground [22][12]block
 
 func main() {
 	initEnv()
-	setGround(0, 0, globalBlockId, 1)
+	createBlockGroup(5, globalBlockId, 1)
 	globalBlockId++
 
 	printArray(ground)
@@ -65,21 +74,17 @@ func main() {
 		if key == keyboard.KeyEsc {
 			break
 		}
+
 		move(ch)
+
+		if ch != 'f' {
+			printArray(ground)
+			continue
+		}
+
 		fallingDown()
 		printArray(ground)
 	}
-}
-
-func centerAlignNumber(n int, width int) string {
-	s := fmt.Sprintf("%d", n)
-	padding := width - len(s)
-	if padding <= 0 {
-		return s
-	}
-	left := padding / 2
-	right := padding - left
-	return strings.Repeat(" ", left) + s + strings.Repeat(" ", right)
 }
 
 func printArray(a [22][12]block) {
@@ -95,53 +100,155 @@ func printArray(a [22][12]block) {
 
 }
 
-func setGround(i int, j int, id int, blockType int) {
+func getRightestByBlockType(blockType int) int {
+	blockShape := blockShapeList[blockType]
+	var rightest int = 0
+	for i := range 4 {
+		for j := range 4 {
+			if blockShape[i][j].id != 0 {
+				rightest = j
+			}
+		}
+	}
+	return rightest
+}
+
+func createBlockGroup(j int, id int, blockType int) {
 	for iP := range 4 {
 		for jP := range 4 {
-			ground[i+iP][j+jP] = blockShapeList[blockType-1][iP][jP]
-			ground[i+iP][j+jP].id = id
+			ground[0+iP][j+jP] = blockShapeList[blockType-1][iP][jP]
+			ground[0+iP][j+jP].id = id
 		}
 	}
+	fallingBlock.id = id
+	fallingBlock.i = 0
+	fallingBlock.j = j
+	fallingBlock.blockType = blockType
 }
-
 func fallingDown() {
-	for i := range 22 {
-		for j := range 12 {
-			blockPtr := &ground[21-i][11-j]
-			if blockPtr.typeId > 0 && blockPtr.isFalling {
-				tmp := *blockPtr
-				if 21-i == 0 {
-					*blockPtr = noneBlock
-				} else {
-					*blockPtr = ground[21-i-1][11-j]
+	iStart := fallingBlock.i
+	jStart := fallingBlock.j
+
+	for i := 3; i >= 0; i-- {
+		for j := 0; j < 4; j++ {
+			curI := iStart + i
+			curJ := jStart + j
+			if curI >= len(ground) || curJ >= len(ground[0]) {
+				continue
+			}
+			if ground[curI][curJ].id == fallingBlock.id {
+				belowI := curI + 1
+				if belowI >= len(ground) || (ground[belowI][curJ].typeId > 0 && ground[belowI][curJ].id != fallingBlock.id) {
+					setBlocksIsFallingFalse(fallingBlock.id)
+					return
 				}
-				if 21-i+1 == 22 {
-					setBlocksIsFallingFalse(blockPtr.id)
-				} else {
-					ground[21-i+1][11-j] = tmp
-				}
+			}
+			if ground[curI][curJ].id == fallingBlock.id {
+				ground[curI+1][curJ] = ground[curI][curJ]
+				ground[curI][curJ] = noneBlock
 			}
 		}
 	}
+
+	fallingBlock.i++
 }
 
-// 해당 블럭의 가장 왼쪽(j), 가장 위쪽(i)
 func setBlocksIsFallingFalse(blockId int) {
 	count := 0
-	for i := range 22 {
-		for j := range 12 {
-			if ground[21-i][11-j].id == blockId {
-				ground[21-i][11-j].isFalling = false
+	startI := fallingBlock.i
+	startJ := fallingBlock.j
+
+	for i := startI; i < startI+4 && i < len(ground); i++ {
+		for j := startJ; j < startJ+4 && j < len(ground[0]); j++ {
+			if ground[i][j].id == blockId {
+				ground[i][j].isFalling = false
 				count++
-			}
-			if count == 4 {
-				return
+				if count == 4 {
+					fallingBlock = blockInfo{}
+					return
+				}
 			}
 		}
 	}
 }
 
 func move(q rune) {
+	if fallingBlock.id == 0 {
+		return
+	}
+	rightest := getRightestByBlockType(fallingBlock.blockType)
+	switch q {
+	case 'd':
+
+		if fallingBlock.j+rightest >= len(ground[0]) {
+			return
+		}
+
+		for i := 0; i < 4; i++ {
+			for j := rightest; j >= 0; j-- {
+				if fallingBlock.j+rightest+1 >= len(ground[0]) {
+					return
+				}
+				b := ground[fallingBlock.i+i][fallingBlock.j+j]
+				if b.id == fallingBlock.id {
+					if ground[fallingBlock.i+i][fallingBlock.j+j+1].isNotNone &&
+						ground[fallingBlock.i+i][fallingBlock.j+j+1].id != fallingBlock.id {
+						return
+					}
+				}
+			}
+		}
+
+		// 오른쪽으로 한 칸 이동 (오른쪽 끝부터 복사)
+		for i := 0; i < 4; i++ {
+			for j := rightest; j >= 0; j-- {
+				b := ground[fallingBlock.i+i][fallingBlock.j+j]
+				if b.id == fallingBlock.id {
+					ground[fallingBlock.i+i][fallingBlock.j+j+1] = b
+					ground[fallingBlock.i+i][fallingBlock.j+j] = noneBlock
+				}
+			}
+		}
+		fallingBlock.j++
+
+	case 'a': // 왼쪽 이동
+		// 왼쪽 경계 체크
+		if fallingBlock.j <= 0 {
+			return
+		}
+
+		// 왼쪽 칸이 비어있는지 확인 (충돌 방지)
+		for i := 0; i < 4; i++ {
+			for j := 0; j < 4; j++ {
+				if fallingBlock.j+j >= len(ground[0]) {
+					break
+				}
+				b := ground[fallingBlock.i+i][fallingBlock.j+j]
+
+				if b.id == fallingBlock.id {
+					if ground[fallingBlock.i+i][fallingBlock.j+j-1].isNotNone &&
+						ground[fallingBlock.i+i][fallingBlock.j+j-1].id != fallingBlock.id {
+						return
+					}
+				}
+			}
+		}
+
+		// 왼쪽으로 한 칸 이동 (왼쪽 끝부터 복사)
+		for i := 0; i < 4; i++ {
+			for j := 0; j < 4; j++ {
+				if fallingBlock.j+j >= len(ground[0]) {
+					break
+				}
+				b := ground[fallingBlock.i+i][fallingBlock.j+j]
+				if b.id == fallingBlock.id {
+					ground[fallingBlock.i+i][fallingBlock.j+j-1] = b
+					ground[fallingBlock.i+i][fallingBlock.j+j] = noneBlock
+				}
+			}
+		}
+		fallingBlock.j--
+	}
 }
 
 func initEnv() {

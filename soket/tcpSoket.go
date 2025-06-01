@@ -1,4 +1,4 @@
-package main
+package soket
 
 import (
 	"bufio"
@@ -10,13 +10,7 @@ import (
 	"time"
 )
 
-func main() {
-	go startServerSide()
-	time.Sleep(time.Second)
-	connectServerSide()
-}
-
-func startServerSide() {
+func StartServerSide() {
 	listener, err := net.Listen("tcp", "0.0.0.0:9000")
 	if err != nil {
 		panic(err)
@@ -50,7 +44,7 @@ func startServerSide() {
 
 	}
 }
-func connectServerSide() {
+func ConnectServerSide() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("서버 아이피를 입력 : ")
 	ip, _ := reader.ReadString('\n')

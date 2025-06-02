@@ -243,10 +243,18 @@ func GetBottomestByBlockType(blockType int, d rune) int {
 }
 
 func CreateBlockGroup(j int, blockType int, d rune) {
+	count := 0
+	iiP := 0
 	for iP := range 4 {
 		for jP := range 4 {
-			Ground[0+iP][j+jP] = blockShapeList[blockType-1][d][iP][jP]
-			Ground[0+iP][j+jP].id = GlobalBlockId
+			Ground[0+iP+iiP][j+jP] = blockShapeList[blockType-1][d][iP][jP]
+			Ground[0+iP+iiP][j+jP].id = GlobalBlockId
+			if blockShapeList[blockType-1][d][iP][jP].typeId != 0 {
+				count++
+			}
+		}
+		if count == 0 {
+			iiP--
 		}
 	}
 	fallingBlock.id = GlobalBlockId

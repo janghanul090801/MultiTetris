@@ -87,7 +87,7 @@ func getUrl() {
 
 }
 
-func StartServerSide_() {
+func StartServerSide() {
 	http.HandleFunc("/message", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			body, err := io.ReadAll(r.Body)
@@ -106,7 +106,7 @@ func StartServerSide_() {
 	fmt.Println("서버 시작 : 8080 포트")
 	_ = http.ListenAndServe(":8080", nil)
 }
-func ConnectServerSide_() {
+func ConnectServerSide() {
 	fmt.Println("서버 url를 입력 : ")
 	url, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	url = strings.TrimSpace(url)

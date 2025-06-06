@@ -150,12 +150,12 @@ func InitEnv() {
 		{noneBlock, noneBlock, CreateBlock(5)},
 		{CreateBlock(5), CreateBlock(5), CreateBlock(5)},
 	}
-	blockShapeList[4]['t'] = [4][4]Block{
+	blockShapeList[4]['r'] = [4][4]Block{
 		{noneBlock, CreateBlock(5)},
 		{noneBlock, CreateBlock(5)},
 		{noneBlock, CreateBlock(5), CreateBlock(5)},
 	}
-	blockShapeList[4]['t'] = [4][4]Block{
+	blockShapeList[4]['b'] = [4][4]Block{
 		{},
 		{CreateBlock(5), CreateBlock(5), CreateBlock(5)},
 		{CreateBlock(5)},
@@ -202,7 +202,7 @@ func InitEnv() {
 		{CreateBlock(7), CreateBlock(7)},
 		{noneBlock, CreateBlock(7), CreateBlock(7)},
 	}
-	blockShapeList[6]['t'] = [4][4]Block{
+	blockShapeList[6]['l'] = [4][4]Block{
 		{noneBlock, CreateBlock(7)},
 		{CreateBlock(7), CreateBlock(7)},
 		{CreateBlock(7)},

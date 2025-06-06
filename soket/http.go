@@ -1,4 +1,4 @@
-package main
+package soket
 
 import (
 	"bufio"
@@ -35,17 +35,17 @@ var Ground [22][12]Block
 
 var cmd *exec.Cmd
 
-func main() {
-	getUrl()
-	go StartServerSide()
-
-	ConnectServerSide()
-
-	//StartServerSide()
-	fmt.Println("Kill ngrok")
-	_ = cmd.Process.Kill()
-	_ = cmd.Wait()
-}
+//func main() {
+//	getUrl()
+//	go StartServerSide()
+//
+//	ConnectServerSide()
+//
+//	//StartServerSide()
+//	fmt.Println("Kill ngrok")
+//	_ = cmd.Process.Kill()
+//	_ = cmd.Wait()
+//}
 
 func getUrl() {
 	cmd = exec.Command("./ngrok", "http", "8080")
@@ -87,7 +87,7 @@ func getUrl() {
 
 }
 
-func StartServerSide() {
+func StartServerSide_() {
 	http.HandleFunc("/message", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			body, err := io.ReadAll(r.Body)
@@ -106,7 +106,7 @@ func StartServerSide() {
 	fmt.Println("서버 시작 : 8080 포트")
 	_ = http.ListenAndServe(":8080", nil)
 }
-func ConnectServerSide() {
+func ConnectServerSide_() {
 	fmt.Println("서버 url를 입력 : ")
 	url, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	url = strings.TrimSpace(url)

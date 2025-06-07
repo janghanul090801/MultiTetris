@@ -6,34 +6,42 @@ import (
 )
 
 type Block struct {
-	id        int
-	typeId    int
-	isFalling bool
-	isNotNone bool
+	id        int  // 블럭 연결을 인식하기 위한 아이디
+	typeId    int  // 블럭 모양을 인식하기 위한 아이디
+	isFalling bool // 떨어지는 중인지 확인
+	isNotNone bool // nil이 아닌지 == 블럭이 차 있는지
 	direction rune // 상t하b좌l우r
 }
 
 type blockInfo struct {
 	id        int
-	i         int
+	i         int // 해당 블럭의 가장 왼쪽(j), 가장 위쪽(i)
 	j         int
 	blockType int
 	direction rune
 }
 
-// 해당 블럭의 가장 왼쪽(j), 가장 위쪽(i)
+// 지금 떨어지고 있는 블럭의 정보
 
+// 이건 걍 비어있는거 표시하는거
 var noneBlock = Block{0, 0, false, false, 't'}
+
+// 블럭에 아이디 부여하기 위한거
 var GlobalBlockId = 1
+
+// 지금 떨어지고 있는 블럭의 정보 객체
 var fallingBlock blockInfo
 
+// 게임판
 var Ground [22][12]Block
 
+// 블럭 하나 만드는건데 귀찮아서 매크로한거임
 func CreateBlock(typeId int) Block {
 	b := Block{0, typeId, true, true, 't'}
 	return b
 }
 
+// 블럭 타입 아이디 별로 컬러 지정한거임
 var blockColorMap = map[int]*color.Color{
 	0: color.New(color.BgBlack),
 	1: color.New(color.BgCyan),
@@ -45,8 +53,10 @@ var blockColorMap = map[int]*color.Color{
 	7: color.New(color.BgRed),
 }
 
+// [타입아이디-1][direction]으로 넣으면 블럭모양 [4][4] 로 가져올 수 있음
 var blockShapeList [7]map[rune][4][4]Block
 
+// 게임판 출력해주는거
 func PrintArray(a [22][12]Block) {
 	// screen.Clear()
 	fmt.Println()
@@ -60,6 +70,7 @@ func PrintArray(a [22][12]Block) {
 
 }
 
+// 게임 시작하기 전 환경설정
 func InitEnv() {
 	color.NoColor = false
 
@@ -150,17 +161,17 @@ func InitEnv() {
 		{noneBlock, noneBlock, CreateBlock(5)},
 		{CreateBlock(5), CreateBlock(5), CreateBlock(5)},
 	}
-	blockShapeList[4]['t'] = [4][4]Block{
+	blockShapeList[4]['r'] = [4][4]Block{
 		{noneBlock, CreateBlock(5)},
 		{noneBlock, CreateBlock(5)},
 		{noneBlock, CreateBlock(5), CreateBlock(5)},
 	}
-	blockShapeList[4]['t'] = [4][4]Block{
+	blockShapeList[4]['b'] = [4][4]Block{
 		{},
 		{CreateBlock(5), CreateBlock(5), CreateBlock(5)},
 		{CreateBlock(5)},
 	}
-	blockShapeList[4]['t'] = [4][4]Block{
+	blockShapeList[4]['l'] = [4][4]Block{
 		{CreateBlock(5), CreateBlock(5)},
 		{noneBlock, CreateBlock(5)},
 		{noneBlock, CreateBlock(5)},
@@ -209,6 +220,7 @@ func InitEnv() {
 	}
 }
 
+// 해당 블럭 모양의 가장 오른쪽을 리턴
 func GetRightestByBlockType(blockType int, d rune) int {
 	blockShape := blockShapeList[blockType-1][d]
 	var rightest = 0
@@ -224,6 +236,7 @@ func GetRightestByBlockType(blockType int, d rune) int {
 	return rightest
 }
 
+// 해당 블럭 모양의 가장 아래쪽을 리턴
 func GetBottomestByBlockType(blockType int, d rune) int {
 	if blockType == 0 {
 		return 0
@@ -242,6 +255,7 @@ func GetBottomestByBlockType(blockType int, d rune) int {
 	return bottomest
 }
 
+// 해당 블럭 모양을 만듦
 func CreateBlockGroup(j int, blockType int, d rune) {
 	count := 0
 	iiP := 0
@@ -264,6 +278,8 @@ func CreateBlockGroup(j int, blockType int, d rune) {
 	fallingBlock.blockType = blockType
 	fallingBlock.direction = d
 }
+
+// 지금 떨어지고 있는 블럭 한칸 아래로 떨어지는거
 func FallingDown() {
 	iStart := fallingBlock.i
 	jStart := fallingBlock.j
@@ -295,6 +311,8 @@ func FallingDown() {
 	fallingBlock.i++
 }
 
+// 바닥에 떨어지면 fallingBlock에서 삭제하는거
+// 이거 새 블럭 만들어서 fallingBlock으로 지정해주는 로직 필요함
 func SetBlocksIsFallingFalse(blockId int) {
 	count := 0
 	startI := fallingBlock.i
@@ -314,6 +332,7 @@ func SetBlocksIsFallingFalse(blockId int) {
 	}
 }
 
+// wasd 받아서 해당 방향으로 이동
 func Move(q rune) {
 	if fallingBlock.id == 0 {
 		return

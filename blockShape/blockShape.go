@@ -213,7 +213,7 @@ func InitEnv() {
 		{CreateBlock(7), CreateBlock(7)},
 		{noneBlock, CreateBlock(7), CreateBlock(7)},
 	}
-	blockShapeList[6]['t'] = [4][4]Block{
+	blockShapeList[6]['l'] = [4][4]Block{
 		{noneBlock, CreateBlock(7)},
 		{CreateBlock(7), CreateBlock(7)},
 		{CreateBlock(7)},

@@ -19,7 +19,6 @@ func main() {
 
 	blockShape.InitEnv()
 	blockShape.CreateBlockGroup(5, 1, 't')
-	defense.InitDefense()
 	blockShape.PrintArray(blockShape.Ground)
 	//StartServerSide()
 	ConnectServerSide()
@@ -50,6 +49,7 @@ func main() {
 			continue
 		}
 
+		defense.InitDefense()
 		blockShape.FallingDown()
 		blockShape.PrintArray(blockShape.Ground)
 	}

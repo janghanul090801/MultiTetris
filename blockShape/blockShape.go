@@ -6,7 +6,7 @@ import (
 )
 
 type Block struct {
-	id        int  // 블럭 연결을 인식하기 위한 아이디
+	Id        int  // 블럭 연결을 인식하기 위한 아이디
 	typeId    int  // 블럭 모양을 인식하기 위한 아이디
 	isFalling bool // 떨어지는 중인지 확인
 	isNotNone bool // nil이 아닌지 == 블럭이 차 있는지
@@ -14,7 +14,7 @@ type Block struct {
 }
 
 type blockInfo struct {
-	id        int
+	Id        int
 	i         int // 해당 블럭의 가장 왼쪽(j), 가장 위쪽(i)
 	j         int
 	blockType int
@@ -24,13 +24,13 @@ type blockInfo struct {
 // 지금 떨어지고 있는 블럭의 정보
 
 // 이건 걍 비어있는거 표시하는거
-var noneBlock = Block{0, 0, false, false, 't'}
+var NoneBlock = Block{0, 0, false, false, 't'}
 
 // 블럭에 아이디 부여하기 위한거
 var GlobalBlockId = 1
 
 // 지금 떨어지고 있는 블럭의 정보 객체
-var fallingBlock blockInfo
+var FallingBlock blockInfo
 
 // 게임판
 var Ground [22][12]Block
@@ -83,10 +83,10 @@ func InitEnv() {
 		{CreateBlock(1), CreateBlock(1), CreateBlock(1), CreateBlock(1)},
 	}
 	blockShapeList[0]['r'] = [4][4]Block{
-		{noneBlock, noneBlock, CreateBlock(1)},
-		{noneBlock, noneBlock, CreateBlock(1)},
-		{noneBlock, noneBlock, CreateBlock(1)},
-		{noneBlock, noneBlock, CreateBlock(1)},
+		{NoneBlock, NoneBlock, CreateBlock(1)},
+		{NoneBlock, NoneBlock, CreateBlock(1)},
+		{NoneBlock, NoneBlock, CreateBlock(1)},
+		{NoneBlock, NoneBlock, CreateBlock(1)},
 	}
 	blockShapeList[0]['b'] = [4][4]Block{
 		{},
@@ -94,10 +94,10 @@ func InitEnv() {
 		{CreateBlock(1), CreateBlock(1), CreateBlock(1), CreateBlock(1)},
 	}
 	blockShapeList[0]['l'] = [4][4]Block{
-		{noneBlock, CreateBlock(1)},
-		{noneBlock, CreateBlock(1)},
-		{noneBlock, CreateBlock(1)},
-		{noneBlock, CreateBlock(1)},
+		{NoneBlock, CreateBlock(1)},
+		{NoneBlock, CreateBlock(1)},
+		{NoneBlock, CreateBlock(1)},
+		{NoneBlock, CreateBlock(1)},
 	}
 
 	blockShapeList[1]['t'] = [4][4]Block{
@@ -105,39 +105,39 @@ func InitEnv() {
 		{CreateBlock(2), CreateBlock(2), CreateBlock(2)},
 	}
 	blockShapeList[1]['r'] = [4][4]Block{
-		{noneBlock, CreateBlock(2), CreateBlock(2)},
-		{noneBlock, CreateBlock(2)},
-		{noneBlock, CreateBlock(2)},
+		{NoneBlock, CreateBlock(2), CreateBlock(2)},
+		{NoneBlock, CreateBlock(2)},
+		{NoneBlock, CreateBlock(2)},
 	}
 	blockShapeList[1]['b'] = [4][4]Block{
 		{},
 		{CreateBlock(2), CreateBlock(2), CreateBlock(2)},
-		{noneBlock, noneBlock, CreateBlock(2)},
+		{NoneBlock, NoneBlock, CreateBlock(2)},
 	}
 	blockShapeList[1]['l'] = [4][4]Block{
-		{noneBlock, CreateBlock(2)},
-		{noneBlock, CreateBlock(2)},
+		{NoneBlock, CreateBlock(2)},
+		{NoneBlock, CreateBlock(2)},
 		{CreateBlock(2), CreateBlock(2)},
 	}
 
 	blockShapeList[2]['t'] = [4][4]Block{
-		{noneBlock, CreateBlock(3)},
+		{NoneBlock, CreateBlock(3)},
 		{CreateBlock(3), CreateBlock(3), CreateBlock(3)},
 	}
 	blockShapeList[2]['r'] = [4][4]Block{
-		{noneBlock, CreateBlock(3)},
-		{noneBlock, CreateBlock(3), CreateBlock(3)},
-		{noneBlock, CreateBlock(3)},
+		{NoneBlock, CreateBlock(3)},
+		{NoneBlock, CreateBlock(3), CreateBlock(3)},
+		{NoneBlock, CreateBlock(3)},
 	}
 	blockShapeList[2]['b'] = [4][4]Block{
 		{},
 		{CreateBlock(3), CreateBlock(3), CreateBlock(3)},
-		{noneBlock, CreateBlock(3)},
+		{NoneBlock, CreateBlock(3)},
 	}
 	blockShapeList[2]['l'] = [4][4]Block{
-		{noneBlock, CreateBlock(3)},
+		{NoneBlock, CreateBlock(3)},
 		{CreateBlock(3), CreateBlock(3)},
-		{noneBlock, CreateBlock(3)},
+		{NoneBlock, CreateBlock(3)},
 	}
 
 	blockShapeList[3]['t'] = [4][4]Block{
@@ -158,13 +158,13 @@ func InitEnv() {
 	}
 
 	blockShapeList[4]['t'] = [4][4]Block{
-		{noneBlock, noneBlock, CreateBlock(5)},
+		{NoneBlock, NoneBlock, CreateBlock(5)},
 		{CreateBlock(5), CreateBlock(5), CreateBlock(5)},
 	}
 	blockShapeList[4]['r'] = [4][4]Block{
-		{noneBlock, CreateBlock(5)},
-		{noneBlock, CreateBlock(5)},
-		{noneBlock, CreateBlock(5), CreateBlock(5)},
+		{NoneBlock, CreateBlock(5)},
+		{NoneBlock, CreateBlock(5)},
+		{NoneBlock, CreateBlock(5), CreateBlock(5)},
 	}
 	blockShapeList[4]['b'] = [4][4]Block{
 		{},
@@ -173,48 +173,48 @@ func InitEnv() {
 	}
 	blockShapeList[4]['l'] = [4][4]Block{
 		{CreateBlock(5), CreateBlock(5)},
-		{noneBlock, CreateBlock(5)},
-		{noneBlock, CreateBlock(5)},
+		{NoneBlock, CreateBlock(5)},
+		{NoneBlock, CreateBlock(5)},
 	}
 
 	// S자 블록 (6)
 	blockShapeList[5]['t'] = [4][4]Block{
-		{noneBlock, CreateBlock(6), CreateBlock(6)},
+		{NoneBlock, CreateBlock(6), CreateBlock(6)},
 		{CreateBlock(6), CreateBlock(6)},
 	}
 	blockShapeList[5]['r'] = [4][4]Block{
-		{noneBlock, CreateBlock(6)},
-		{noneBlock, CreateBlock(6), CreateBlock(6)},
-		{noneBlock, noneBlock, CreateBlock(6)},
+		{NoneBlock, CreateBlock(6)},
+		{NoneBlock, CreateBlock(6), CreateBlock(6)},
+		{NoneBlock, NoneBlock, CreateBlock(6)},
 	}
 	blockShapeList[5]['b'] = [4][4]Block{
 		{},
-		{noneBlock, CreateBlock(6), CreateBlock(6)},
+		{NoneBlock, CreateBlock(6), CreateBlock(6)},
 		{CreateBlock(6), CreateBlock(6)},
 	}
 	blockShapeList[5]['l'] = [4][4]Block{
 		{CreateBlock(6)},
 		{CreateBlock(6), CreateBlock(6)},
-		{noneBlock, CreateBlock(6)},
+		{NoneBlock, CreateBlock(6)},
 	}
 
 	// Z자 블록 (7)
 	blockShapeList[6]['t'] = [4][4]Block{
 		{CreateBlock(7), CreateBlock(7)},
-		{noneBlock, CreateBlock(7), CreateBlock(7)},
+		{NoneBlock, CreateBlock(7), CreateBlock(7)},
 	}
 	blockShapeList[6]['r'] = [4][4]Block{
-		{noneBlock, noneBlock, CreateBlock(7)},
-		{noneBlock, CreateBlock(7), CreateBlock(7)},
-		{noneBlock, CreateBlock(7)},
+		{NoneBlock, NoneBlock, CreateBlock(7)},
+		{NoneBlock, CreateBlock(7), CreateBlock(7)},
+		{NoneBlock, CreateBlock(7)},
 	}
 	blockShapeList[6]['b'] = [4][4]Block{
 		{},
 		{CreateBlock(7), CreateBlock(7)},
-		{noneBlock, CreateBlock(7), CreateBlock(7)},
+		{NoneBlock, CreateBlock(7), CreateBlock(7)},
 	}
-	blockShapeList[6]['t'] = [4][4]Block{
-		{noneBlock, CreateBlock(7)},
+	blockShapeList[6]['l'] = [4][4]Block{
+		{NoneBlock, CreateBlock(7)},
 		{CreateBlock(7), CreateBlock(7)},
 		{CreateBlock(7)},
 	}
@@ -262,7 +262,7 @@ func CreateBlockGroup(j int, blockType int, d rune) {
 	for iP := range 4 {
 		for jP := range 4 {
 			Ground[0+iP+iiP][j+jP] = blockShapeList[blockType-1][d][iP][jP]
-			Ground[0+iP+iiP][j+jP].id = GlobalBlockId
+			Ground[0+iP+iiP][j+jP].Id = GlobalBlockId
 			if blockShapeList[blockType-1][d][iP][jP].typeId != 0 {
 				count++
 			}
@@ -271,18 +271,18 @@ func CreateBlockGroup(j int, blockType int, d rune) {
 			iiP--
 		}
 	}
-	fallingBlock.id = GlobalBlockId
+	FallingBlock.Id = GlobalBlockId
 	GlobalBlockId++
-	fallingBlock.i = 0
-	fallingBlock.j = j
-	fallingBlock.blockType = blockType
-	fallingBlock.direction = d
+	FallingBlock.i = 0
+	FallingBlock.j = j
+	FallingBlock.blockType = blockType
+	FallingBlock.direction = d
 }
 
 // 지금 떨어지고 있는 블럭 한칸 아래로 떨어지는거
 func FallingDown() {
-	iStart := fallingBlock.i
-	jStart := fallingBlock.j
+	iStart := FallingBlock.i
+	jStart := FallingBlock.j
 
 	for i := 3; i >= 0; i-- {
 		for j := 0; j < 4; j++ {
@@ -291,40 +291,40 @@ func FallingDown() {
 			if curI >= len(Ground) || curJ >= len(Ground[0]) {
 				continue
 			}
-			if Ground[curI][curJ].id == fallingBlock.id {
+			if Ground[curI][curJ].Id == FallingBlock.Id {
 				belowI := curI + 1
 				if belowI >= len(Ground) {
 					continue
 				}
-				if Ground[belowI][curJ].typeId != 0 && GetBottomestByBlockType(fallingBlock.blockType, fallingBlock.direction)+belowI >= len(Ground) {
-					SetBlocksIsFallingFalse(fallingBlock.id)
+				if Ground[belowI][curJ].typeId != 0 && GetBottomestByBlockType(FallingBlock.blockType, FallingBlock.direction)+belowI >= len(Ground) {
+					SetBlocksIsFallingFalse(FallingBlock.Id)
 					return
 				}
 			}
-			if Ground[curI][curJ].id == fallingBlock.id {
+			if Ground[curI][curJ].Id == FallingBlock.Id {
 				Ground[curI+1][curJ] = Ground[curI][curJ]
-				Ground[curI][curJ] = noneBlock
+				Ground[curI][curJ] = NoneBlock
 			}
 		}
 	}
 
-	fallingBlock.i++
+	FallingBlock.i++
 }
 
 // 바닥에 떨어지면 fallingBlock에서 삭제하는거
 // 이거 새 블럭 만들어서 fallingBlock으로 지정해주는 로직 필요함
 func SetBlocksIsFallingFalse(blockId int) {
 	count := 0
-	startI := fallingBlock.i
-	startJ := fallingBlock.j
+	startI := FallingBlock.i
+	startJ := FallingBlock.j
 
 	for i := startI; i < startI+4 && i < len(Ground); i++ {
 		for j := startJ; j < startJ+4 && j < len(Ground[0]); j++ {
-			if Ground[i][j].id == blockId {
+			if Ground[i][j].Id == blockId {
 				Ground[i][j].isFalling = false
 				count++
 				if count == 4 {
-					fallingBlock = blockInfo{}
+					FallingBlock = blockInfo{}
 					return
 				}
 			}
@@ -334,26 +334,26 @@ func SetBlocksIsFallingFalse(blockId int) {
 
 // wasd 받아서 해당 방향으로 이동
 func Move(q rune) {
-	if fallingBlock.id == 0 {
+	if FallingBlock.Id == 0 {
 		return
 	}
-	rightest := GetRightestByBlockType(fallingBlock.blockType, fallingBlock.direction)
+	rightest := GetRightestByBlockType(FallingBlock.blockType, FallingBlock.direction)
 	switch q {
 	case 'd':
 
-		if fallingBlock.j+rightest >= len(Ground[0]) {
+		if FallingBlock.j+rightest >= len(Ground[0]) {
 			return
 		}
 
 		for i := 0; i < 4; i++ {
 			for j := rightest; j >= 0; j-- {
-				if fallingBlock.j+rightest+1 >= len(Ground[0]) {
+				if FallingBlock.j+rightest+1 >= len(Ground[0]) {
 					return
 				}
-				b := Ground[fallingBlock.i+i][fallingBlock.j+j]
-				if b.id == fallingBlock.id {
-					if Ground[fallingBlock.i+i][fallingBlock.j+j+1].isNotNone &&
-						Ground[fallingBlock.i+i][fallingBlock.j+j+1].id != fallingBlock.id {
+				b := Ground[FallingBlock.i+i][FallingBlock.j+j]
+				if b.Id == FallingBlock.Id {
+					if Ground[FallingBlock.i+i][FallingBlock.j+j+1].isNotNone &&
+						Ground[FallingBlock.i+i][FallingBlock.j+j+1].Id != FallingBlock.Id {
 						return
 					}
 				}
@@ -363,32 +363,32 @@ func Move(q rune) {
 		// 오른쪽으로 한 칸 이동 (오른쪽 끝부터 복사)
 		for i := 0; i < 4; i++ {
 			for j := rightest; j >= 0; j-- {
-				b := Ground[fallingBlock.i+i][fallingBlock.j+j]
-				if b.id == fallingBlock.id {
-					Ground[fallingBlock.i+i][fallingBlock.j+j+1] = b
-					Ground[fallingBlock.i+i][fallingBlock.j+j] = noneBlock
+				b := Ground[FallingBlock.i+i][FallingBlock.j+j]
+				if b.Id == FallingBlock.Id {
+					Ground[FallingBlock.i+i][FallingBlock.j+j+1] = b
+					Ground[FallingBlock.i+i][FallingBlock.j+j] = NoneBlock
 				}
 			}
 		}
-		fallingBlock.j++
+		FallingBlock.j++
 
 	case 'a': // 왼쪽 이동
 		// 왼쪽 경계 체크
-		if fallingBlock.j <= 0 {
+		if FallingBlock.j <= 0 {
 			return
 		}
 
 		// 왼쪽 칸이 비어있는지 확인 (충돌 방지)
 		for i := 0; i < 4; i++ {
 			for j := 0; j < 4; j++ {
-				if fallingBlock.j+j >= len(Ground[0]) {
+				if FallingBlock.j+j >= len(Ground[0]) {
 					break
 				}
-				b := Ground[fallingBlock.i+i][fallingBlock.j+j]
+				b := Ground[FallingBlock.i+i][FallingBlock.j+j]
 
-				if b.id == fallingBlock.id {
-					if Ground[fallingBlock.i+i][fallingBlock.j+j-1].isNotNone &&
-						Ground[fallingBlock.i+i][fallingBlock.j+j-1].id != fallingBlock.id {
+				if b.Id == FallingBlock.Id {
+					if Ground[FallingBlock.i+i][FallingBlock.j+j-1].isNotNone &&
+						Ground[FallingBlock.i+i][FallingBlock.j+j-1].Id != FallingBlock.Id {
 						return
 					}
 				}
@@ -398,16 +398,26 @@ func Move(q rune) {
 		// 왼쪽으로 한 칸 이동 (왼쪽 끝부터 복사)
 		for i := 0; i < 4; i++ {
 			for j := 0; j < 4; j++ {
-				if fallingBlock.j+j >= len(Ground[0]) {
+				if FallingBlock.j+j >= len(Ground[0]) {
 					break
 				}
-				b := Ground[fallingBlock.i+i][fallingBlock.j+j]
-				if b.id == fallingBlock.id {
-					Ground[fallingBlock.i+i][fallingBlock.j+j-1] = b
-					Ground[fallingBlock.i+i][fallingBlock.j+j] = noneBlock
+				b := Ground[FallingBlock.i+i][FallingBlock.j+j]
+				if b.Id == FallingBlock.Id {
+					Ground[FallingBlock.i+i][FallingBlock.j+j-1] = b
+					Ground[FallingBlock.i+i][FallingBlock.j+j] = NoneBlock
 				}
 			}
 		}
-		fallingBlock.j--
+		FallingBlock.j--
 	}
+}
+func DeleteFallingBlock() { //수비 성공시 FallingBlock 삭제
+	for i := FallingBlock.i; i < FallingBlock.i+4 && i < len(Ground); i++ {
+		for j := FallingBlock.j; j < FallingBlock.j+4 && j < len(Ground[0]); j++ {
+			if Ground[i][j].Id == FallingBlock.Id {
+				Ground[i][j] = NoneBlock
+			}
+		}
+	}
+	FallingBlock = blockInfo{} // FallingBlock 초기화
 }

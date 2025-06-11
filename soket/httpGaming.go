@@ -77,14 +77,14 @@ func getUrl() {
 
 }
 
-func startServerSide() {
+func StartServerSide() {
 	http.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			body, err := io.ReadAll(r.Body)
 			if err == nil {
 				fmt.Println("받은 메시지:", string(body))
 				_, _ = w.Write([]byte("O"))
-				gamingServerSide()
+				GamingServerSide()
 			} else {
 				_, _ = w.Write([]byte(err.Error()))
 			}
@@ -96,7 +96,7 @@ func startServerSide() {
 	fmt.Println("서버 시작 : 8080 포트")
 	_ = http.ListenAndServe(":8080", nil)
 }
-func connectServerSide() {
+func ConnectServerSide() {
 	fmt.Println("서버 url를 입력 : ")
 	url, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	url = strings.TrimSpace(url)
@@ -119,7 +119,7 @@ func connectServerSide() {
 	}
 }
 
-func gamingServerSide() {
+func GamingServerSide() {
 	http.HandleFunc("/gaming", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			body, _ := io.ReadAll(r.Body)
@@ -136,7 +136,7 @@ func gamingServerSide() {
 	})
 }
 
-func gamingClientSide(url string, message string) [22][12]blockShape.Block {
+func GamingClientSide(url string, message string) [22][12]blockShape.Block {
 	resp, err := http.Post(url+"/gaming", "text/plain", bytes.NewBuffer([]byte(message)))
 	if err != nil {
 		panic(err)
@@ -154,12 +154,4 @@ func gamingClientSide(url string, message string) [22][12]blockShape.Block {
 	}
 
 	return bodyS
-}
-
-func Server() {
-	startServerSide()
-}
-
-func Client() {
-	connectServerSide()
 }

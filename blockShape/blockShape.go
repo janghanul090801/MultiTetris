@@ -3,6 +3,10 @@ package blockShape
 import (
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/inancgumus/screen"
+	"math"
+	"math/rand"
+	"time"
 )
 
 type Block struct {
@@ -35,6 +39,8 @@ var FallingBlock blockInfo
 // 게임판
 var Ground [22][12]Block
 
+var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 // 블럭 하나 만드는건데 귀찮아서 매크로한거임
 func CreateBlock(typeId int) Block {
 	b := Block{0, typeId, true, true, 't'}
@@ -56,9 +62,13 @@ var blockColorMap = map[int]*color.Color{
 // [타입아이디-1][direction]으로 넣으면 블럭모양 [4][4] 로 가져올 수 있음
 var blockShapeList [7]map[rune][4][4]Block
 
+// 회전 관련
+var RotationRune = [4]rune{'t', 'r', 'b', 'l'}
+var globalRotateNum = 0
+
 // 게임판 출력해주는거
 func PrintArray(a [22][12]Block) {
-	// screen.Clear()
+	screen.Clear()
 	fmt.Println()
 	for _, i := range a {
 		for _, j := range i {
@@ -330,6 +340,8 @@ func SetBlocksIsFallingFalse(blockId int) {
 			}
 		}
 	}
+
+	CreateBlockGroup(5, 3, 't')
 }
 
 // wasd 받아서 해당 방향으로 이동
@@ -378,7 +390,7 @@ func Move(q rune) {
 			return
 		}
 
-		// 왼쪽 칸이 비어있는지 확인 (충돌 방지)
+		// 왼쪽 칸이 비어있는지 확인 (충돌 방지) // 이거 getLiftest 뭐시기 해서 왼쪽도 확인 필요함
 		for i := 0; i < 4; i++ {
 			for j := 0; j < 4; j++ {
 				if FallingBlock.j+j >= len(Ground[0]) {
@@ -409,6 +421,12 @@ func Move(q rune) {
 			}
 		}
 		FallingBlock.j--
+	case 'e':
+		globalRotateNum++
+		RotateBlock(FallingBlock.Id, FallingBlock.blockType)
+	case 'q':
+		globalRotateNum--
+		RotateBlock(FallingBlock.Id, FallingBlock.blockType)
 	}
 }
 func DeleteFallingBlock() { //수비 성공시 FallingBlock 삭제
@@ -420,4 +438,30 @@ func DeleteFallingBlock() { //수비 성공시 FallingBlock 삭제
 		}
 	}
 	FallingBlock = blockInfo{} // FallingBlock 초기화
+}
+
+func RotateBlock(id int, blockId int) {
+	direction := RotationRune[int(math.Abs(float64(globalRotateNum)))%4]
+	nextShape := blockShapeList[blockId-1][direction]
+
+	// 회전 가능한지 확인하는거
+	for i := range 4 {
+		for j := range 4 {
+			if FallingBlock.i+i >= len(Ground) || FallingBlock.j+j >= len(Ground[0]) {
+				return
+			}
+			if (Ground[FallingBlock.i+i][FallingBlock.j+j].Id != 0 && Ground[FallingBlock.i+i][FallingBlock.j+j].Id != id) && nextShape[i][j].Id != 0 {
+				return
+			}
+		}
+	}
+
+	for i := range 4 {
+		for j := range 4 {
+			Ground[FallingBlock.i+i][FallingBlock.j+j] = nextShape[i][j]
+			Ground[FallingBlock.i+i][FallingBlock.j+j].Id = id
+		}
+	}
+
+	FallingBlock.direction = direction
 }

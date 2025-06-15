@@ -265,6 +265,44 @@ func GetBottomestByBlockType(blockType int, d rune) int {
 	return bottomest
 }
 
+func GetLeftestByBlockType(blockType int, d rune) int {
+	if blockType == 0 {
+		return 0
+	}
+	blockShape := blockShapeList[blockType-1][d]
+	var leftest = 3
+	for i := range 4 {
+		for j := range 4 {
+			if blockShape[i][j].typeId != 0 {
+				if j < leftest {
+					leftest = j
+				}
+			}
+		}
+	}
+
+	return leftest
+}
+
+func GetTopestByBlockType(blockType int, d rune) int {
+	if blockType == 0 {
+		return 0
+	}
+	blockShape := blockShapeList[blockType-1][d]
+	var topest = 3
+	for i := range 4 {
+		for j := range 4 {
+			if blockShape[i][j].typeId != 0 {
+				if i < topest {
+					topest = i
+				}
+			}
+		}
+	}
+
+	return topest
+}
+
 // 해당 블럭 모양을 만듦
 func CreateBlockGroup(j int, blockType int, d rune) {
 	count := 0
@@ -287,6 +325,26 @@ func CreateBlockGroup(j int, blockType int, d rune) {
 	FallingBlock.j = j
 	FallingBlock.blockType = blockType
 	FallingBlock.direction = d
+}
+
+func DrawFallingBlock() {
+	block := FallingBlock
+	blockShape := blockShapeList[block.blockType-1][block.direction]
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			if blockShape[i][j].typeId != 0 {
+				ii := block.i + i
+				jj := block.j + j
+				if ii >= 0 && ii < len(Ground) && jj >= 0 && jj < len(Ground[0]) {
+					Ground[ii][jj] = Block{
+						typeId:    block.blockType,
+						isFalling: true,
+						Id:        block.Id,
+					}
+				}
+			}
+		}
+	}
 }
 
 // 지금 떨어지고 있는 블럭 한칸 아래로 떨어지는거
@@ -344,89 +402,66 @@ func SetBlocksIsFallingFalse(blockId int) {
 	CreateBlockGroup(5, 3, 't')
 }
 
+func EraseBlock() {
+	block := FallingBlock
+	blockShape := blockShapeList[block.blockType-1][block.direction]
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			if blockShape[i][j].typeId != 0 {
+				ii := block.i + i
+				jj := block.j + j
+				if ii >= 0 && ii < len(Ground) && jj >= 0 && jj < len(Ground[0]) {
+					if Ground[ii][jj].Id == block.Id {
+						Ground[ii][jj] = NoneBlock
+					}
+				}
+			}
+		}
+	}
+}
+
+func CanMove(q int) bool {
+	block := FallingBlock
+	shape := blockShapeList[block.blockType-1][block.direction]
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			if shape[i][j].typeId != 0 {
+				ii := block.i + i
+				jj := block.j + j + q
+				if jj < 0 || jj >= len(Ground[0]) {
+					return false
+				}
+				if ii >= 0 && Ground[ii][jj].typeId != 0 && Ground[ii][jj].Id != block.Id {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
 // wasd 받아서 해당 방향으로 이동
 func Move(q rune) {
 	if FallingBlock.Id == 0 {
 		return
 	}
-	rightest := GetRightestByBlockType(FallingBlock.blockType, FallingBlock.direction)
 	switch q {
 	case 'd':
-
-		if FallingBlock.j+rightest >= len(Ground[0]) {
-			return
+		if CanMove(1) {
+			EraseBlock()
+			FallingBlock.j++
+			DrawFallingBlock()
 		}
-
-		for i := 0; i < 4; i++ {
-			for j := rightest; j >= 0; j-- {
-				if FallingBlock.j+rightest+1 >= len(Ground[0]) {
-					return
-				}
-				b := Ground[FallingBlock.i+i][FallingBlock.j+j]
-				if b.Id == FallingBlock.Id {
-					if Ground[FallingBlock.i+i][FallingBlock.j+j+1].isNotNone &&
-						Ground[FallingBlock.i+i][FallingBlock.j+j+1].Id != FallingBlock.Id {
-						return
-					}
-				}
-			}
-		}
-
-		// 오른쪽으로 한 칸 이동 (오른쪽 끝부터 복사)
-		for i := 0; i < 4; i++ {
-			for j := rightest; j >= 0; j-- {
-				b := Ground[FallingBlock.i+i][FallingBlock.j+j]
-				if b.Id == FallingBlock.Id {
-					Ground[FallingBlock.i+i][FallingBlock.j+j+1] = b
-					Ground[FallingBlock.i+i][FallingBlock.j+j] = NoneBlock
-				}
-			}
-		}
-		FallingBlock.j++
-
 	case 'a': // 왼쪽 이동
-		// 왼쪽 경계 체크
-		if FallingBlock.j <= 0 {
-			return
+		if CanMove(-1) {
+			EraseBlock()
+			FallingBlock.j--
+			DrawFallingBlock()
 		}
-
-		// 왼쪽 칸이 비어있는지 확인 (충돌 방지) // 이거 getLiftest 뭐시기 해서 왼쪽도 확인 필요함
-		for i := 0; i < 4; i++ {
-			for j := 0; j < 4; j++ {
-				if FallingBlock.j+j >= len(Ground[0]) {
-					break
-				}
-				b := Ground[FallingBlock.i+i][FallingBlock.j+j]
-
-				if b.Id == FallingBlock.Id {
-					if Ground[FallingBlock.i+i][FallingBlock.j+j-1].isNotNone &&
-						Ground[FallingBlock.i+i][FallingBlock.j+j-1].Id != FallingBlock.Id {
-						return
-					}
-				}
-			}
-		}
-
-		// 왼쪽으로 한 칸 이동 (왼쪽 끝부터 복사)
-		for i := 0; i < 4; i++ {
-			for j := 0; j < 4; j++ {
-				if FallingBlock.j+j >= len(Ground[0]) {
-					break
-				}
-				b := Ground[FallingBlock.i+i][FallingBlock.j+j]
-				if b.Id == FallingBlock.Id {
-					Ground[FallingBlock.i+i][FallingBlock.j+j-1] = b
-					Ground[FallingBlock.i+i][FallingBlock.j+j] = NoneBlock
-				}
-			}
-		}
-		FallingBlock.j--
 	case 'e':
-		globalRotateNum++
-		RotateBlock(FallingBlock.Id, FallingBlock.blockType)
+		RotateBlock(1)
 	case 'q':
-		globalRotateNum--
-		RotateBlock(FallingBlock.Id, FallingBlock.blockType)
+		RotateBlock(-1)
 	}
 }
 func DeleteFallingBlock() { //수비 성공시 FallingBlock 삭제
@@ -440,28 +475,32 @@ func DeleteFallingBlock() { //수비 성공시 FallingBlock 삭제
 	FallingBlock = blockInfo{} // FallingBlock 초기화
 }
 
-func RotateBlock(id int, blockId int) {
-	direction := RotationRune[int(math.Abs(float64(globalRotateNum)))%4]
-	nextShape := blockShapeList[blockId-1][direction]
-
-	// 회전 가능한지 확인하는거
-	for i := range 4 {
-		for j := range 4 {
-			if FallingBlock.i+i >= len(Ground) || FallingBlock.j+j >= len(Ground[0]) {
-				return
-			}
-			if (Ground[FallingBlock.i+i][FallingBlock.j+j].Id != 0 && Ground[FallingBlock.i+i][FallingBlock.j+j].Id != id) && nextShape[i][j].Id != 0 {
-				return
+func CanRotate(q int) bool {
+	block := FallingBlock
+	direction := RotationRune[int(math.Abs(float64(globalRotateNum+q)))%4]
+	shape := blockShapeList[block.blockType-1][direction]
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			if shape[i][j].typeId != 0 {
+				ii := block.i + i
+				jj := block.j + j
+				if jj < 0 || jj >= len(Ground[0]) || ii >= len(Ground) {
+					return false
+				}
+				if ii >= 0 && Ground[ii][jj].typeId != 0 && Ground[ii][jj].Id != block.Id {
+					return false
+				}
 			}
 		}
 	}
+	return true
+}
 
-	for i := range 4 {
-		for j := range 4 {
-			Ground[FallingBlock.i+i][FallingBlock.j+j] = nextShape[i][j]
-			Ground[FallingBlock.i+i][FallingBlock.j+j].Id = id
-		}
+func RotateBlock(q int) {
+	if CanRotate(q) {
+		EraseBlock()
+		FallingBlock.direction = RotationRune[int(math.Abs(float64(globalRotateNum+q)))%4]
+		globalRotateNum++
+		DrawFallingBlock()
 	}
-
-	FallingBlock.direction = direction
 }

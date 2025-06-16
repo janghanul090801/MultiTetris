@@ -3,7 +3,6 @@ package blockShape
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/inancgumus/screen"
 	"math"
 	"math/rand"
 	"time"
@@ -68,7 +67,7 @@ var globalRotateNum = 0
 
 // 게임판 출력해주는거
 func PrintArray(a [22][12]Block) {
-	screen.Clear()
+	// screen.Clear()
 	fmt.Println()
 	for _, i := range a {
 		for _, j := range i {
@@ -230,79 +229,6 @@ func InitEnv() {
 	}
 }
 
-// 해당 블럭 모양의 가장 오른쪽을 리턴
-func GetRightestByBlockType(blockType int, d rune) int {
-	blockShape := blockShapeList[blockType-1][d]
-	var rightest = 0
-	for i := range 4 {
-		for j := range 4 {
-			if blockShape[i][j].typeId != 0 {
-				if j > rightest {
-					rightest = j
-				}
-			}
-		}
-	}
-	return rightest
-}
-
-// 해당 블럭 모양의 가장 아래쪽을 리턴
-func GetBottomestByBlockType(blockType int, d rune) int {
-	if blockType == 0 {
-		return 0
-	}
-	blockShape := blockShapeList[blockType-1][d]
-	var bottomest = 0
-	for i := range 4 {
-		for j := range 4 {
-			if blockShape[i][j].typeId != 0 {
-				if i > bottomest {
-					bottomest = i
-				}
-			}
-		}
-	}
-	return bottomest
-}
-
-func GetLeftestByBlockType(blockType int, d rune) int {
-	if blockType == 0 {
-		return 0
-	}
-	blockShape := blockShapeList[blockType-1][d]
-	var leftest = 3
-	for i := range 4 {
-		for j := range 4 {
-			if blockShape[i][j].typeId != 0 {
-				if j < leftest {
-					leftest = j
-				}
-			}
-		}
-	}
-
-	return leftest
-}
-
-func GetTopestByBlockType(blockType int, d rune) int {
-	if blockType == 0 {
-		return 0
-	}
-	blockShape := blockShapeList[blockType-1][d]
-	var topest = 3
-	for i := range 4 {
-		for j := range 4 {
-			if blockShape[i][j].typeId != 0 {
-				if i < topest {
-					topest = i
-				}
-			}
-		}
-	}
-
-	return topest
-}
-
 // 해당 블럭 모양을 만듦
 func CreateBlockGroup(j int, blockType int, d rune) {
 	count := 0
@@ -332,16 +258,52 @@ func DrawFallingBlock() {
 	blockShape := blockShapeList[block.blockType-1][block.direction]
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
-			if blockShape[i][j].typeId != 0 {
-				ii := block.i + i
-				jj := block.j + j
-				if ii >= 0 && ii < len(Ground) && jj >= 0 && jj < len(Ground[0]) {
-					Ground[ii][jj] = Block{
-						typeId:    block.blockType,
-						isFalling: true,
-						Id:        block.Id,
-					}
+			if blockShape[i][j].typeId == 0 {
+				continue
+			}
+			ii := block.i + i
+			jj := block.j + j
+			if ii >= 0 && ii < len(Ground) && jj >= 0 && jj < len(Ground[0]) {
+				// 이미 고정된 블럭이 있는 경우 건너뜀 (덮지 않음)
+				if Ground[ii][jj].typeId != 0 && !Ground[ii][jj].isFalling {
+					continue
 				}
+				Ground[ii][jj] = Block{
+					typeId:    block.blockType,
+					isFalling: true,
+					Id:        block.Id,
+				}
+			}
+		}
+	}
+}
+
+func CanFall() bool {
+	block := FallingBlock
+	blockShape := blockShapeList[block.blockType-1][block.direction]
+	for i := 3; i >= 0; i-- {
+		for j := 0; j < 4; j++ {
+			if blockShape[i][j].typeId == 0 {
+				continue
+			}
+			curI := block.i + i
+			curJ := block.j + j
+			if curI+1 >= len(Ground) {
+				return false
+			}
+			if Ground[curI+1][curJ].typeId != 0 && Ground[curI+1][curJ].isFalling == false {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func ClearFallingBlock() {
+	for i := range Ground {
+		for j := range Ground[i] {
+			if Ground[i][j].isFalling {
+				Ground[i][j] = NoneBlock
 			}
 		}
 	}
@@ -349,37 +311,14 @@ func DrawFallingBlock() {
 
 // 지금 떨어지고 있는 블럭 한칸 아래로 떨어지는거
 func FallingDown() {
-	iStart := FallingBlock.i
-	jStart := FallingBlock.j
-
-	for i := 3; i >= 0; i-- {
-		for j := 0; j < 4; j++ {
-			curI := iStart + i
-			curJ := jStart + j
-			if curI >= len(Ground) || curJ >= len(Ground[0]) {
-				continue
-			}
-			if curJ < 0 {
-				curJ = 0
-			}
-			if Ground[curI][curJ].Id == FallingBlock.Id {
-				belowI := curI + 1
-				if belowI >= len(Ground) {
-					continue
-				}
-				if Ground[belowI][curJ].typeId != 0 && GetBottomestByBlockType(FallingBlock.blockType, FallingBlock.direction)+belowI >= len(Ground) {
-					SetBlocksIsFallingFalse(FallingBlock.Id)
-					return
-				}
-			}
-			if Ground[curI][curJ].Id == FallingBlock.Id {
-				Ground[curI+1][curJ] = Ground[curI][curJ]
-				Ground[curI][curJ] = NoneBlock
-			}
-		}
+	if !CanFall() {
+		SetBlocksIsFallingFalse(FallingBlock.Id)
+		return
 	}
 
+	ClearFallingBlock()
 	FallingBlock.i++
+	DrawFallingBlock()
 }
 
 // 바닥에 떨어지면 fallingBlock에서 삭제하는거

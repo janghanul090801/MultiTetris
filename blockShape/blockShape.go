@@ -359,6 +359,9 @@ func FallingDown() {
 			if curI >= len(Ground) || curJ >= len(Ground[0]) {
 				continue
 			}
+			if curJ < 0 {
+				curJ = 0
+			}
 			if Ground[curI][curJ].Id == FallingBlock.Id {
 				belowI := curI + 1
 				if belowI >= len(Ground) {
@@ -386,20 +389,25 @@ func SetBlocksIsFallingFalse(blockId int) {
 	startI := FallingBlock.i
 	startJ := FallingBlock.j
 
+OUT:
 	for i := startI; i < startI+4 && i < len(Ground); i++ {
 		for j := startJ; j < startJ+4 && j < len(Ground[0]); j++ {
+			if j < 0 {
+				j = 0
+			}
 			if Ground[i][j].Id == blockId {
 				Ground[i][j].isFalling = false
 				count++
 				if count == 4 {
 					FallingBlock = blockInfo{}
-					return
+					break OUT
 				}
 			}
 		}
 	}
 
 	CreateBlockGroup(5, 3, 't')
+	CheckLine()
 }
 
 func EraseBlock() {
@@ -502,5 +510,34 @@ func RotateBlock(q int) {
 		FallingBlock.direction = RotationRune[int(math.Abs(float64(globalRotateNum+q)))%4]
 		globalRotateNum++
 		DrawFallingBlock()
+	}
+}
+
+func IsLimited(i int) bool {
+	for j := range len(Ground[0]) {
+		if Ground[i][j].typeId == 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func ClearLine(ii int) {
+	for i := ii; i > 0; i-- {
+		for j := 0; j < len(Ground[i]); j++ {
+			Ground[i][j] = Ground[i-1][j]
+		}
+	}
+	for j := 0; j < len(Ground[0]); j++ {
+		Ground[0][j] = Block{typeId: 0}
+	}
+}
+
+func CheckLine() {
+	for i := len(Ground) - 1; i >= 0; i-- {
+		if IsLimited(i) {
+			ClearLine(i)
+			i++
+		}
 	}
 }

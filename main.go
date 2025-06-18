@@ -1,6 +1,7 @@
 package main
 
 import (
+	"MultiTetris/attack"
 	"MultiTetris/blockShape"
 	"MultiTetris/soket"
 	"fmt"
@@ -13,6 +14,9 @@ func main() {
 	}
 	defer keyboard.Close()
 
+	blockShape.InitEnv()
+	blockShape.PrintArray(blockShape.Ground)
+	attack.Attack()
 	fmt.Println("1 -> 서버 테스트 실행")
 	ch, _, _ := keyboard.GetKey()
 	if ch == '1' {

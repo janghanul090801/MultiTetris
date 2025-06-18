@@ -28,6 +28,7 @@ type blockInfo struct {
 
 // 이건 걍 비어있는거 표시하는거
 var NoneBlock = Block{0, 0, false, false, 't'}
+var CursorBlock = Block{-1, -1, false, false, 't'}
 
 // 블럭에 아이디 부여하기 위한거
 var GlobalBlockId = 1
@@ -48,14 +49,15 @@ func CreateBlock(typeId int) Block {
 
 // 블럭 타입 아이디 별로 컬러 지정한거임
 var blockColorMap = map[int]*color.Color{
-	0: color.New(color.BgBlack),
-	1: color.New(color.BgCyan),
-	2: color.New(color.BgHiRed),
-	3: color.New(color.BgMagenta),
-	4: color.New(color.BgYellow),
-	5: color.New(color.BgBlue),
-	6: color.New(color.BgGreen),
-	7: color.New(color.BgRed),
+	-1: color.New(color.BgRed),
+	0:  color.New(color.BgBlack),
+	1:  color.New(color.BgCyan),
+	2:  color.New(color.BgHiRed),
+	3:  color.New(color.BgMagenta),
+	4:  color.New(color.BgYellow),
+	5:  color.New(color.BgBlue),
+	6:  color.New(color.BgGreen),
+	7:  color.New(color.BgRed),
 }
 
 // [타입아이디-1][direction]으로 넣으면 블럭모양 [4][4] 로 가져올 수 있음

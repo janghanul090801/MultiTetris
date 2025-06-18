@@ -3,6 +3,7 @@ package blockShape
 import (
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/inancgumus/screen"
 	"math"
 	"math/rand"
 	"time"
@@ -67,7 +68,7 @@ var globalRotateNum = 0
 
 // 게임판 출력해주는거
 func PrintArray(a [22][12]Block) {
-	// screen.Clear()
+	screen.Clear()
 	fmt.Println()
 	for _, i := range a {
 		for _, j := range i {
@@ -227,6 +228,8 @@ func InitEnv() {
 		{CreateBlock(7), CreateBlock(7)},
 		{CreateBlock(7)},
 	}
+
+	CreateBlockGroup(4, rand.Intn(6)+1, 't')
 }
 
 // 해당 블럭 모양을 만듦
@@ -310,6 +313,7 @@ func ClearFallingBlock() {
 }
 
 // 지금 떨어지고 있는 블럭 한칸 아래로 떨어지는거
+// 기존 방식은 연속된 입력에서 불안정함. 완전히 지우고 다시 그리는 식으로 만들음
 func FallingDown() {
 	if !CanFall() {
 		SetBlocksIsFallingFalse(FallingBlock.Id)
@@ -345,7 +349,7 @@ OUT:
 		}
 	}
 
-	CreateBlockGroup(5, 3, 't')
+	CreateBlockGroup(5, rand.Intn(6)+1, 't')
 	CheckLine()
 }
 

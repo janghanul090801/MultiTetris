@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/eiannone/keyboard"
 	"io"
 	"net/http"
 	"os"
@@ -24,6 +25,9 @@ type NgrokTunnels struct {
 }
 
 var cmd *exec.Cmd
+var WaitConnect = make(chan struct{})
+
+// var WaitClient = make(chan struct{})
 
 //func main() {
 //	getUrl()
@@ -37,8 +41,8 @@ var cmd *exec.Cmd
 //	_ = cmd.Wait()
 //}
 
-func getUrl() {
-	cmd = exec.Command("./ngrok", "http", "8080")
+func GetUrl() {
+	cmd = exec.Command("D:\\MultiTetris\\soket\\ngrok.exe", "http", "8080")
 	err := cmd.Start()
 	if err != nil {
 		panic(err)
@@ -84,7 +88,7 @@ func StartServerSide() {
 			if err == nil {
 				fmt.Println("받은 메시지:", string(body))
 				_, _ = w.Write([]byte("O"))
-				GamingServerSide()
+				close(WaitConnect)
 			} else {
 				_, _ = w.Write([]byte(err.Error()))
 			}
@@ -93,10 +97,46 @@ func StartServerSide() {
 		}
 	})
 
+	http.HandleFunc("/gaming", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		body, _ := io.ReadAll(r.Body)
+		fmt.Println("클라 메시지:", string(body))
+
+		fmt.Print("서버 입력: ")
+		ch, key, err := keyboard.GetKey()
+		if err != nil {
+			panic(err)
+		}
+		if key == keyboard.KeyEsc {
+			os.Exit(0)
+		}
+
+		blockShape.Move(ch)
+		if ch == 'f' {
+			blockShape.FallingDown()
+		}
+
+		GroundJson, err := json.Marshal(blockShape.Ground)
+		if err != nil {
+			panic(err)
+		}
+		_, _ = w.Write(GroundJson)
+	})
+
 	fmt.Println("서버 시작 : 8080 포트")
-	_ = http.ListenAndServe(":8080", nil)
+	go func() {
+		err := http.ListenAndServe(":8080", nil)
+		if err != nil {
+			panic(err)
+		}
+	}()
 }
-func ConnectServerSide() {
+
+func ConnectServerSide() (bool, string) {
 	fmt.Println("서버 url를 입력 : ")
 	url, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	url = strings.TrimSpace(url)
@@ -115,24 +155,45 @@ func ConnectServerSide() {
 	bodyS := string(body)
 
 	if bodyS == "O" {
-		// GamingClient로 넘어감
+		return true, url
+	} else {
+		return false, url
 	}
 }
 
 func GamingServerSide() {
 	http.HandleFunc("/gaming", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
-			body, _ := io.ReadAll(r.Body)
-			fmt.Println(string(body))
-			GroundJson, err := json.Marshal(blockShape.Ground)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println(string(GroundJson))
-			_, _ = w.Write(GroundJson)
-		} else {
+		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
+
+		// 1. 클라 메시지 받기
+		body, _ := io.ReadAll(r.Body)
+		fmt.Println("클라 메시지:", string(body))
+
+		// 2. 서버 유저 입력 받기 (블로킹)
+		fmt.Print("서버 입력: ")
+		ch, key, err := keyboard.GetKey()
+		if err != nil {
+			panic(err)
+		}
+		if key == keyboard.KeyEsc {
+			os.Exit(0)
+		}
+
+		// 3. 입력 처리
+		blockShape.Move(ch)
+		if ch == 'f' {
+			blockShape.FallingDown()
+		}
+
+		// 4. 응답으로 게임판 전송
+		GroundJson, err := json.Marshal(blockShape.Ground)
+		if err != nil {
+			panic(err)
+		}
+		_, _ = w.Write(GroundJson)
 	})
 }
 

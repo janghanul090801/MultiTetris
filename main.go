@@ -2,44 +2,39 @@ package main
 
 import (
 	"MultiTetris/blockShape"
+	"MultiTetris/soket"
 	"fmt"
 	"github.com/eiannone/keyboard"
 )
 
 func main() {
-
-	blockShape.InitEnv()
-	blockShape.CreateBlockGroup(5, 3, 't')
-	blockShape.PrintArray(blockShape.Ground)
 	if err := keyboard.Open(); err != nil {
 		panic(err)
 	}
-	defer func() {
-		err := keyboard.Close()
-		if err != nil {
+	defer keyboard.Close()
 
-		}
-	}()
+	fmt.Println("1 -> 서버 테스트 실행")
+	ch, _, _ := keyboard.GetKey()
+	if ch == '1' {
+		soket.GetUrl()
+		soket.StartServerSide() // <- 여기서 gaming 핸들러도 같이 등록됨
 
-	for {
-		fmt.Print(":")
-		ch, key, err := keyboard.GetKey()
-		if err != nil {
-			panic(err)
-		}
-		if key == keyboard.KeyEsc {
-			break
-		}
+		isConnect, url := soket.ConnectServerSide()
 
-		blockShape.Move(ch)
+		<-soket.WaitConnect // 서버로부터 connect 수신 대기
 
-		if ch != 'f' {
-			blockShape.PrintArray(blockShape.Ground)
-			continue
-		}
+		// client-side simulation
+		go func(isConnect bool, url string) {
+			if isConnect {
+				Ground := soket.GamingClientSide(url, "test-move")
+				blockShape.PrintArray(Ground)
+			}
+		}(isConnect, url)
 
-		// defense.InitDefense()
-		blockShape.FallingDown()
+		blockShape.InitEnv()
 		blockShape.PrintArray(blockShape.Ground)
+
+		// 서버는 계속 대기
+		select {}
 	}
 }

@@ -106,20 +106,23 @@ func StartServerSide() {
 		body, _ := io.ReadAll(r.Body)
 		fmt.Println("클라 메시지:", string(body))
 
-		fmt.Print("서버 입력: ")
-		ch, key, err := keyboard.GetKey()
-		if err != nil {
-			panic(err)
-		}
-		if key == keyboard.KeyEsc {
-			os.Exit(0)
-		}
+		for {
+			fmt.Print("서버 입력: ")
+			ch, key, err := keyboard.GetKey()
+			if err != nil {
+				panic(err)
+			}
+			if key == keyboard.KeyEsc {
+				os.Exit(0)
+			}
 
-		blockShape.Move(ch)
-		if ch == 'f' {
-			blockShape.FallingDown()
+			blockShape.Move(ch)
+			if ch == 'f' {
+				blockShape.FallingDown()
+				break
+			}
+			blockShape.PrintArray(blockShape.Ground)
 		}
-
 		GroundJson, err := json.Marshal(blockShape.Ground)
 		if err != nil {
 			panic(err)

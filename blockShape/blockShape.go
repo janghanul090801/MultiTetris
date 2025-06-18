@@ -3,7 +3,6 @@ package blockShape
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/inancgumus/screen"
 	"math"
 	"math/rand"
 	"time"
@@ -68,7 +67,7 @@ var globalRotateNum = 0
 
 // 게임판 출력해주는거
 func PrintArray(a [22][12]Block) {
-	screen.Clear()
+	// screen.Clear()
 	fmt.Println()
 	for _, i := range a {
 		for _, j := range i {

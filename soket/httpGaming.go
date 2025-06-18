@@ -42,7 +42,7 @@ var WaitConnect = make(chan struct{})
 //}
 
 func GetUrl() {
-	cmd = exec.Command("D:\\MultiTetris\\soket\\ngrok.exe", "http", "8080")
+	cmd = exec.Command("C:/Users/JUYOUNG/Desktop/Coding/MultiTetris/soket/ngrok.exe", "http", "8080")
 	err := cmd.Start()
 	if err != nil {
 		panic(err)

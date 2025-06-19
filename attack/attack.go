@@ -4,6 +4,7 @@ import (
 	"MultiTetris/blockShape"
 	"fmt"
 	"github.com/eiannone/keyboard"
+	"strconv"
 )
 
 // Coordinate 입력받을 좌표
@@ -16,7 +17,7 @@ const CursorTypeId = 99
 
 var cursorX, cursorY int = 0, 0
 
-func Attack(Ground [22][12]blockShape.Block) bool {
+func Attack(Ground [22][12]blockShape.Block) (string, bool) {
 	// 주석 좀 달아줘 코드에
 
 	fmt.Println("GoGoGo")
@@ -57,16 +58,16 @@ func Attack(Ground [22][12]blockShape.Block) bool {
 				fmt.Println("수비 성공! : 대단하시네요 ")
 				PrintGroundWithFallingBlock(Ground)
 				// blockShape.DeleteFallingBlock() 이거 서버로 옮기기
-				return true
+				return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), true
 			} else {
 				//fmt.Printf("\033[%d;0H", len(blockShape.Ground))
 				fmt.Println("공격에 실패하셨습니다\n 현재 블록의 위치:")
 				PrintGroundWithFallingBlock(Ground)
-				return false
+				return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
 			}
 		}
 	}
-	return false
+	return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
 }
 func PrintGroundWithFallingBlock(Ground [22][12]blockShape.Block) {
 	copyGround := Ground

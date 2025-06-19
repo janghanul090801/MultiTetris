@@ -16,7 +16,7 @@ const CursorTypeId = 99
 
 var cursorX, cursorY int = 0, 0
 
-func Attack() {
+func Attack(Ground [22][12]blockShape.Block) bool {
 	// 주석 좀 달아줘 코드에
 
 	fmt.Println("GoGoGo")
@@ -26,7 +26,7 @@ func Attack() {
 		//fmt.Print("\033[H")
 		//fmt.Printf("\033[%d;0H", len(blockShape.Ground)+3)
 
-		PrintGroundWithoutFallingBlock()
+		PrintGroundWithoutFallingBlock(Ground)
 		ch, _, err := keyboard.GetKey()
 		if err != nil {
 			fmt.Println("키 입력 에러:", err)
@@ -39,7 +39,7 @@ func Attack() {
 				cursorX--
 			}
 		case 's':
-			if cursorX < len(blockShape.Ground)-1 {
+			if cursorX < len(Ground)-1 {
 				cursorX++
 			}
 		case 'a':
@@ -47,33 +47,34 @@ func Attack() {
 				cursorY--
 			}
 		case 'd':
-			if cursorY < len(blockShape.Ground[0])-1 {
+			if cursorY < len(Ground[0])-1 {
 				cursorY++
 			}
 		case 'f':
 			// 선택 완료! 커서 위치 반환하거나 처리
-			if blockShape.Ground[cursorX][cursorY].Id == blockShape.FallingBlock.Id {
+			if CheckFallingBlock(cursorX, cursorY, Ground) {
 				//fmt.Printf("\033[%d;0H", len(blockShape.Ground))
 				fmt.Println("수비 성공! : 대단하시네요 ")
-				PrintGroundWithFallingBlock()
-				blockShape.DeleteFallingBlock()
-				return
+				PrintGroundWithFallingBlock(Ground)
+				// blockShape.DeleteFallingBlock() 이거 서버로 옮기기
+				return true
 			} else {
 				//fmt.Printf("\033[%d;0H", len(blockShape.Ground))
 				fmt.Println("공격에 실패하셨습니다\n 현재 블록의 위치:")
-				PrintGroundWithFallingBlock()
-				return
+				PrintGroundWithFallingBlock(Ground)
+				return false
 			}
 		}
 	}
+	return false
 }
-func PrintGroundWithFallingBlock() {
-	copyGround := blockShape.Ground
+func PrintGroundWithFallingBlock(Ground [22][12]blockShape.Block) {
+	copyGround := Ground
 	copyGround[cursorX][cursorY] = blockShape.CursorBlock
 	blockShape.PrintArray(copyGround)
 }
-func PrintGroundWithoutFallingBlock() {
-	copyGround := blockShape.Ground // 현재 테트리스 판 복제해서 사용
+func PrintGroundWithoutFallingBlock(Ground [22][12]blockShape.Block) {
+	copyGround := Ground // 현재 테트리스 판 복제해서 사용
 
 	// FallingBlock인 블록들을 빈 블록으로 대체해버리기
 	for i := 0; i < len(copyGround); i++ {
@@ -88,6 +89,6 @@ func PrintGroundWithoutFallingBlock() {
 	blockShape.PrintArray(copyGround)
 }
 
-func CheckFallingBlock(x, y int) bool {
-	return blockShape.Ground[x][y].Id == blockShape.FallingBlock.Id
+func CheckFallingBlock(x, y int, Ground [22][12]blockShape.Block) bool {
+	return Ground[x][y].Id == blockShape.FallingBlock.Id
 }

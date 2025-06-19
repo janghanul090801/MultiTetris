@@ -105,7 +105,15 @@ func StartServerSide() {
 
 		body, _ := io.ReadAll(r.Body)
 		fmt.Println("클라 메시지:", string(body))
+		var attackSuccess string
+		if string(body) == "" {
+			goto RETURN
+		}
+		attackSuccess = strings.Split(string(body), ",")[1]
 
+		if attackSuccess == "1" {
+			blockShape.DeleteFallingBlock()
+		}
 		for {
 			fmt.Print("서버 입력: ")
 			ch, key, err := keyboard.GetKey()
@@ -123,6 +131,7 @@ func StartServerSide() {
 			}
 			blockShape.PrintArray(blockShape.Ground)
 		}
+	RETURN:
 		GroundJson, err := json.Marshal(blockShape.Ground)
 		if err != nil {
 			panic(err)
@@ -164,43 +173,12 @@ func ConnectServerSide() (bool, string) {
 	}
 }
 
-func GamingServerSide() {
-	http.HandleFunc("/gaming", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		// 1. 클라 메시지 받기
-		body, _ := io.ReadAll(r.Body)
-		fmt.Println("클라 메시지:", string(body))
-
-		// 2. 서버 유저 입력 받기 (블로킹)
-		fmt.Print("서버 입력: ")
-		ch, key, err := keyboard.GetKey()
-		if err != nil {
-			panic(err)
-		}
-		if key == keyboard.KeyEsc {
-			os.Exit(0)
-		}
-
-		// 3. 입력 처리
-		blockShape.Move(ch)
-		if ch == 'f' {
-			blockShape.FallingDown()
-		}
-
-		// 4. 응답으로 게임판 전송
-		GroundJson, err := json.Marshal(blockShape.Ground)
-		if err != nil {
-			panic(err)
-		}
-		_, _ = w.Write(GroundJson)
-	})
-}
-
-func GamingClientSide(url string, message string) [22][12]blockShape.Block {
+func GamingClientSide(url string, message string, attackSuccess bool) [22][12]blockShape.Block {
+	if attackSuccess {
+		message += ",1"
+	} else {
+		message += ",0"
+	}
 	resp, err := http.Post(url+"/gaming", "text/plain", bytes.NewBuffer([]byte(message)))
 	if err != nil {
 		panic(err)

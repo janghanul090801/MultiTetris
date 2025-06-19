@@ -2,6 +2,7 @@ package attack
 
 import (
 	"MultiTetris/blockShape"
+	"MultiTetris/user"
 	"fmt"
 	"github.com/eiannone/keyboard"
 )
@@ -12,12 +13,9 @@ type Coordinate struct {
 	Y int
 }
 
-const CursorTypeId = 99
-
 var cursorX, cursorY int = 0, 0
 
 func Attack(Ground [22][12]blockShape.Block) bool {
-	// 주석 좀 달아줘 코드에
 
 	fmt.Println("GoGoGo")
 	_ = keyboard.Open()
@@ -51,17 +49,20 @@ func Attack(Ground [22][12]blockShape.Block) bool {
 				cursorY++
 			}
 		case 'f':
-			// 선택 완료! 커서 위치 반환하거나 처리
+			// 선택 완료 시 처리
 			if CheckFallingBlock(cursorX, cursorY, Ground) {
 				//fmt.Printf("\033[%d;0H", len(blockShape.Ground))
 				fmt.Println("수비 성공! : 대단하시네요 ")
 				PrintGroundWithFallingBlock(Ground)
 				// blockShape.DeleteFallingBlock() 이거 서버로 옮기기
+				user.Me.AttackSuccess()
 				return true
 			} else {
 				//fmt.Printf("\033[%d;0H", len(blockShape.Ground))
 				fmt.Println("공격에 실패하셨습니다\n 현재 블록의 위치:")
 				PrintGroundWithFallingBlock(Ground)
+				user.Me.AttackFailed()
+
 				return false
 			}
 		}

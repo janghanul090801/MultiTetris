@@ -2,12 +2,13 @@ package soket
 
 import (
 	"MultiTetris/blockShape"
-	"bufio"
+	"MultiTetris/user"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/eiannone/keyboard"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -150,10 +151,17 @@ func StartServerSide() {
 
 func ConnectServerSide() (bool, string) {
 	fmt.Println("서버 url를 입력 : ")
-	url, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	var url string
+	fmt.Scanln(&url)
+	fmt.Println(url)
 	url = strings.TrimSpace(url)
+
+	if url == "" {
+		fmt.Println("⚠️ 입력된 URL이 비어 있습니다. ngrok URL을 정확히 입력하세요.")
+		os.Exit(1)
+	}
 	message := []byte("0,0")
-	resp, err := http.Post(url+"/connect", "text/plain", bytes.NewBuffer(message))
+	resp, err := http.Post(url+"connect", "text/plain", bytes.NewBuffer(message))
 	if err != nil {
 		panic(err)
 	}
@@ -165,7 +173,7 @@ func ConnectServerSide() (bool, string) {
 	}
 
 	bodyS := string(body)
-
+	fmt.Println("body:" + bodyS)
 	if bodyS == "O" {
 		return true, url
 	} else {
@@ -179,7 +187,7 @@ func GamingClientSide(url string, message string, attackSuccess bool) [22][12]bl
 	} else {
 		message += ",0"
 	}
-	resp, err := http.Post(url+"/gaming", "text/plain", bytes.NewBuffer([]byte(message)))
+	resp, err := http.Post(url+"gaming", "text/plain", bytes.NewBuffer([]byte(message)))
 	if err != nil {
 		panic(err)
 	}
@@ -196,4 +204,30 @@ func GamingClientSide(url string, message string, attackSuccess bool) [22][12]bl
 	}
 
 	return bodyS
+}
+func SendUserData(url string, u user.User) {
+	data, err := json.Marshal(u) // 이것은 User 구조체 데이터에 작성한 `json:"머시기"`에 맞춰 json 데이터로 바꿔주는 멋있는 함수
+	if err != nil {
+		log.Fatal("json.Marshal에서 에러가 나요ㅠㅠ", err)
+	}
+
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		log.Fatal("http.Post에서 에러가 나요ㅠㅠ", err)
+	}
+	defer resp.Body.Close()
+
+}
+func UserDataPostHandler(w http.ResponseWriter, r *http.Request) {
+
+	var u user.User
+	err := json.NewDecoder(r.Body).Decode(&u) //NewDecoder로 JSON 파일로 읽고 User 타임으로 바꿔주는 엄청난 함수
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest) // 실패;
+		return
+	}
+
+	log.Printf("받은 user data: %+v\n", u)
+
+	w.Write([]byte("OK")) // 잘 받았다고 상대한테 OK 사인 보내주는 함수
 }

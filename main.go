@@ -9,16 +9,16 @@ import (
 )
 
 func main() {
-	if err := keyboard.Open(); err != nil {
-		panic(err)
-	}
-	defer keyboard.Close()
-
 	blockShape.InitEnv()
 	blockShape.PrintArray(blockShape.Ground)
 	fmt.Println("1 -> 서버 테스트 실행")
-	ch, _, _ := keyboard.GetKey()
-	if ch == '1' {
+	var ch string
+	fmt.Scanln(&ch)
+	if ch == "1" {
+		if err := keyboard.Open(); err != nil {
+			panic(err)
+		}
+		defer keyboard.Close()
 		soket.GetUrl()
 		soket.StartServerSide() // <- 여기서 gaming 핸들러도 같이 등록됨
 
@@ -30,11 +30,16 @@ func main() {
 
 		// 서버는 계속 대기
 		select {}
-	} else if ch == '2' {
+	} else if ch == "2" {
 		isConnected, url := soket.ConnectServerSide()
 
+		if err := keyboard.Open(); err != nil {
+			panic(err)
+		}
+		defer keyboard.Close()
+
 		if isConnected {
-			Ground := soket.GamingClientSide(url, "", false)
+			Ground := soket.GamingClientSide(url, ",", false)
 			for {
 				b := attack.Attack(Ground)
 				soket.GamingClientSide(url, "", b)

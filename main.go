@@ -58,9 +58,10 @@ func main() {
 			}()
 			for {
 				s, b := attack.Attack(gameState.Ground, gameState.FallingBlock)
+				fmt.Println("서버턴 대기중....")
 				gameState = soket.GamingClientSide(url, s, b)
 				screen.Clear()
-				fmt.Println("서버턴 대기중....")
+
 				<-soket.WaitClient
 			}
 		}

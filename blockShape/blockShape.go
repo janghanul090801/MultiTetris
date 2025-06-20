@@ -5,25 +5,24 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/inancgumus/screen"
-	"math"
 	"math/rand"
 	"time"
 )
 
 type Block struct {
-	Id        int  // 블럭 연결을 인식하기 위한 아이디
-	typeId    int  // 블럭 모양을 인식하기 위한 아이디
-	isFalling bool // 떨어지는 중인지 확인
-	isNotNone bool // nil이 아닌지 == 블럭이 차 있는지
-	direction rune // 상t하b좌l우r
+	Id        int  `json:"id"`        // 블럭 연결을 인식하기 위한 아이디
+	TypeId    int  `json:"typeId"`    // 블럭 모양을 인식하기 위한 아이디
+	IsFalling bool `json:"isFalling"` // 떨어지는 중인지 확인
+	IsNotNone bool `json:"isNotNone"` // nil이 아닌지 == 블럭이 차 있는지
+	Direction rune `json:"direction"` // 상t하b좌l우r
 }
 
 type BlockInfo struct {
-	Id        int
-	i         int // 해당 블럭의 가장 왼쪽(j), 가장 위쪽(i)
-	j         int
-	blockType int
-	direction rune
+	Id        int  `json:"id"`
+	I         int  `json:"i"` // 해당 블럭의 가장 위쪽(i)
+	J         int  `json:"j"` // 가장 왼쪽(j)
+	BlockType int  `json:"blockType"`
+	Direction rune `json:"direction"`
 }
 
 // 지금 떨어지고 있는 블럭의 정보
@@ -75,7 +74,7 @@ func PrintArray(a [10][10]Block) {
 	fmt.Println()
 	for _, i := range a {
 		for _, j := range i {
-			_, _ = blockColorMap[j.typeId].Print("  ")
+			_, _ = blockColorMap[j.TypeId].Print("  ")
 
 		}
 		fmt.Println()
@@ -243,7 +242,7 @@ func CreateBlockGroup(j int, blockType int, d rune) {
 		for jP := range 4 {
 			Ground[0+iP+iiP][j+jP] = blockShapeList[blockType-1][d][iP][jP]
 			Ground[0+iP+iiP][j+jP].Id = GlobalBlockId
-			if blockShapeList[blockType-1][d][iP][jP].typeId != 0 {
+			if blockShapeList[blockType-1][d][iP][jP].TypeId != 0 {
 				count++
 			}
 		}
@@ -253,30 +252,30 @@ func CreateBlockGroup(j int, blockType int, d rune) {
 	}
 	FallingBlock.Id = GlobalBlockId
 	GlobalBlockId++
-	FallingBlock.i = 0
-	FallingBlock.j = j
-	FallingBlock.blockType = blockType
-	FallingBlock.direction = d
+	FallingBlock.I = 0
+	FallingBlock.J = j
+	FallingBlock.BlockType = blockType
+	FallingBlock.Direction = d
 }
 
 func DrawFallingBlock() {
 	block := FallingBlock
-	blockShape := blockShapeList[block.blockType-1][block.direction]
+	blockShape := blockShapeList[block.BlockType-1][block.Direction]
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
-			if blockShape[i][j].typeId == 0 {
+			if blockShape[i][j].TypeId == 0 {
 				continue
 			}
-			ii := block.i + i
-			jj := block.j + j
+			ii := block.I + i
+			jj := block.J + j
 			if ii >= 0 && ii < len(Ground) && jj >= 0 && jj < len(Ground[0]) {
 				// 이미 고정된 블럭이 있는 경우 건너뜀 (덮지 않음)
-				if Ground[ii][jj].typeId != 0 && !Ground[ii][jj].isFalling {
+				if Ground[ii][jj].TypeId != 0 && !Ground[ii][jj].IsFalling {
 					continue
 				}
 				Ground[ii][jj] = Block{
-					typeId:    block.blockType,
-					isFalling: true,
+					TypeId:    block.BlockType,
+					IsFalling: true,
 					Id:        block.Id,
 				}
 			}
@@ -286,18 +285,18 @@ func DrawFallingBlock() {
 
 func CanFall() bool {
 	block := FallingBlock
-	blockShape := blockShapeList[block.blockType-1][block.direction]
+	blockShape := blockShapeList[block.BlockType-1][block.Direction]
 	for i := 3; i >= 0; i-- {
 		for j := 0; j < 4; j++ {
-			if blockShape[i][j].typeId == 0 {
+			if blockShape[i][j].TypeId == 0 {
 				continue
 			}
-			curI := block.i + i
-			curJ := block.j + j
+			curI := block.I + i
+			curJ := block.J + j
 			if curI+1 >= len(Ground) {
 				return false
 			}
-			if Ground[curI+1][curJ].typeId != 0 && Ground[curI+1][curJ].isFalling == false {
+			if Ground[curI+1][curJ].TypeId != 0 && Ground[curI+1][curJ].IsFalling == false {
 				return false
 			}
 		}
@@ -308,7 +307,7 @@ func CanFall() bool {
 func ClearFallingBlock() {
 	for i := range Ground {
 		for j := range Ground[i] {
-			if Ground[i][j].isFalling {
+			if Ground[i][j].IsFalling {
 				Ground[i][j] = NoneBlock
 			}
 		}
@@ -324,7 +323,7 @@ func FallingDown() {
 	}
 
 	ClearFallingBlock()
-	FallingBlock.i++
+	FallingBlock.I++
 	DrawFallingBlock()
 }
 
@@ -332,8 +331,8 @@ func FallingDown() {
 // 이거 새 블럭 만들어서 fallingBlock으로 지정해주는 로직 필요함
 func SetBlocksIsFallingFalse(blockId int) {
 	count := 0
-	startI := FallingBlock.i
-	startJ := FallingBlock.j
+	startI := FallingBlock.I
+	startJ := FallingBlock.J
 
 OUT:
 	for i := startI; i < startI+4 && i < len(Ground); i++ {
@@ -342,7 +341,7 @@ OUT:
 				j = 0
 			}
 			if Ground[i][j].Id == blockId {
-				Ground[i][j].isFalling = false
+				Ground[i][j].IsFalling = false
 				count++
 				if count == 4 {
 					FallingBlock = BlockInfo{}
@@ -358,12 +357,12 @@ OUT:
 
 func EraseBlock() {
 	block := FallingBlock
-	blockShape := blockShapeList[block.blockType-1][block.direction]
+	blockShape := blockShapeList[block.BlockType-1][block.Direction]
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
-			if blockShape[i][j].typeId != 0 {
-				ii := block.i + i
-				jj := block.j + j
+			if blockShape[i][j].TypeId != 0 {
+				ii := block.I + i
+				jj := block.J + j
 				if ii >= 0 && ii < len(Ground) && jj >= 0 && jj < len(Ground[0]) {
 					if Ground[ii][jj].Id == block.Id {
 						Ground[ii][jj] = NoneBlock
@@ -376,16 +375,16 @@ func EraseBlock() {
 
 func CanMove(q int) bool {
 	block := FallingBlock
-	shape := blockShapeList[block.blockType-1][block.direction]
+	shape := blockShapeList[block.BlockType-1][block.Direction]
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
-			if shape[i][j].typeId != 0 {
-				ii := block.i + i
-				jj := block.j + j + q
+			if shape[i][j].TypeId != 0 {
+				ii := block.I + i
+				jj := block.J + j + q
 				if jj < 0 || jj >= len(Ground[0]) {
 					return false
 				}
-				if ii >= 0 && Ground[ii][jj].typeId != 0 && Ground[ii][jj].Id != block.Id {
+				if ii >= 0 && Ground[ii][jj].TypeId != 0 && Ground[ii][jj].Id != block.Id {
 					return false
 				}
 			}
@@ -403,13 +402,13 @@ func Move(q rune) {
 	case 'd':
 		if CanMove(1) {
 			EraseBlock()
-			FallingBlock.j++
+			FallingBlock.J++
 			DrawFallingBlock()
 		}
 	case 'a': // 왼쪽 이동
 		if CanMove(-1) {
 			EraseBlock()
-			FallingBlock.j--
+			FallingBlock.J--
 			DrawFallingBlock()
 		}
 	case 'e':
@@ -419,8 +418,8 @@ func Move(q rune) {
 	}
 }
 func DeleteFallingBlock() {
-	for i := FallingBlock.i; i < FallingBlock.i+4 && i < len(Ground); i++ {
-		for j := FallingBlock.j; j < FallingBlock.j+4 && j < len(Ground[0]); j++ {
+	for i := FallingBlock.I; i < FallingBlock.I+4 && i < len(Ground); i++ {
+		for j := FallingBlock.J; j < FallingBlock.J+4 && j < len(Ground[0]); j++ {
 			jj := j
 			if j < 0 {
 				jj = 0
@@ -433,21 +432,32 @@ func DeleteFallingBlock() {
 	CreateBlockGroup(5, rand.Intn(6)+1, 't') // FallingBlock 초기화
 }
 
-func CanRotate(q int) bool {
+func getNextDirection(current rune, q int) rune {
+	// 시계 방향: +1, 반시계 방향: -1
+	idxMap := map[rune]int{'t': 0, 'r': 1, 'b': 2, 'l': 3}
+	runes := []rune{'t', 'r', 'b', 'l'}
+
+	currentIdx := idxMap[current]
+	nextIdx := (currentIdx + q + 4) % 4
+	return runes[nextIdx]
+}
+
+func CanRotateTo(dir rune) bool {
 	block := FallingBlock
-	direction := RotationRune[int(math.Abs(float64(globalRotateNum+q)))%4]
-	shape := blockShapeList[block.blockType-1][direction]
+	shape := blockShapeList[block.BlockType-1][dir]
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
-			if shape[i][j].typeId != 0 {
-				ii := block.i + i
-				jj := block.j + j
-				if jj < 0 || jj >= len(Ground[0]) || ii >= len(Ground) {
-					return false
-				}
-				if ii >= 0 && Ground[ii][jj].typeId != 0 && Ground[ii][jj].Id != block.Id {
-					return false
-				}
+			if shape[i][j].TypeId == 0 {
+				continue
+			}
+			ii := block.I + i
+			jj := block.J + j
+
+			if ii >= len(Ground) || jj < 0 || jj >= len(Ground[0]) {
+				return false
+			}
+			if Ground[ii][jj].TypeId != 0 && Ground[ii][jj].Id != block.Id {
+				return false
 			}
 		}
 	}
@@ -455,17 +465,22 @@ func CanRotate(q int) bool {
 }
 
 func RotateBlock(q int) {
-	if CanRotate(q) {
+	if FallingBlock.Id == 0 {
+		return
+	}
+
+	nextDir := getNextDirection(FallingBlock.Direction, q)
+
+	if CanRotateTo(nextDir) {
 		EraseBlock()
-		FallingBlock.direction = RotationRune[int(math.Abs(float64(globalRotateNum+q)))%4]
-		globalRotateNum++
+		FallingBlock.Direction = nextDir
 		DrawFallingBlock()
 	}
 }
 
 func IsLimited(i int) bool {
 	for j := range len(Ground[0]) {
-		if Ground[i][j].typeId == 0 {
+		if Ground[i][j].TypeId == 0 {
 			return false
 		}
 	}
@@ -479,7 +494,7 @@ func ClearLine(ii int) {
 		}
 	}
 	for j := 0; j < len(Ground[0]); j++ {
-		Ground[0][j] = Block{typeId: 0}
+		Ground[0][j] = Block{TypeId: 0}
 	}
 	user.Me.LineClearSuccess(1)
 }

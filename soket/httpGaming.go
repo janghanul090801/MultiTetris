@@ -28,7 +28,7 @@ type NgrokTunnels struct {
 var cmd *exec.Cmd
 var WaitConnect = make(chan struct{})
 
-// var WaitClient = make(chan struct{})
+var WaitClient = make(chan struct{})
 
 //func main() {
 //	getUrl()
@@ -43,7 +43,7 @@ var WaitConnect = make(chan struct{})
 //}
 
 func GetUrl() {
-	cmd = exec.Command("C:/Users/JUYOUNG/Desktop/Coding/MultiTetris/soket/ngrok.exe", "http", "8080")
+	cmd = exec.Command("soket/ngrok.exe", "http", "8080")
 	err := cmd.Start()
 	if err != nil {
 		panic(err)
@@ -138,6 +138,7 @@ func StartServerSide() {
 			panic(err)
 		}
 		_, _ = w.Write(GroundJson)
+		fmt.Println("반환 완료")
 	})
 
 	fmt.Println("서버 시작 : 8080 포트")
@@ -182,6 +183,7 @@ func ConnectServerSide() (bool, string) {
 }
 
 func GamingClientSide(url string, message string, attackSuccess bool) [22][12]blockShape.Block {
+	WaitClient = make(chan struct{})
 	if attackSuccess {
 		message += ",1"
 	} else {
@@ -202,6 +204,8 @@ func GamingClientSide(url string, message string, attackSuccess bool) [22][12]bl
 	if err != nil {
 		panic(err)
 	}
+
+	close(WaitClient)
 
 	return bodyS
 }

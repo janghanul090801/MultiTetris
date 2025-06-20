@@ -16,7 +16,7 @@ type Coordinate struct {
 
 var cursorX, cursorY int = 0, 0
 
-func Attack(Ground [22][12]blockShape.Block) (string, bool) {
+func Attack(Ground [22][12]blockShape.Block, FallingBlock blockShape.BlockInfo) (string, bool) {
 
 	fmt.Println("GoGoGo")
 	_ = keyboard.Open()
@@ -25,7 +25,7 @@ func Attack(Ground [22][12]blockShape.Block) (string, bool) {
 		//fmt.Print("\033[H")
 		//fmt.Printf("\033[%d;0H", len(blockShape.Ground)+3)
 
-		PrintGroundWithoutFallingBlock(Ground)
+		PrintGroundWithoutFallingBlock(Ground, FallingBlock)
 		ch, _, err := keyboard.GetKey()
 		if err != nil {
 			fmt.Println("키 입력 에러:", err)
@@ -51,7 +51,7 @@ func Attack(Ground [22][12]blockShape.Block) (string, bool) {
 			}
 		case 'f':
 			// 선택 완료 시 처리
-			if CheckFallingBlock(cursorX, cursorY, Ground) {
+			if CheckFallingBlock(cursorX, cursorY, Ground, FallingBlock) {
 				//fmt.Printf("\033[%d;0H", len(blockShape.Ground))
 				fmt.Println("수비 성공! : 대단하시네요 ")
 				PrintGroundWithFallingBlock(Ground)
@@ -74,13 +74,13 @@ func PrintGroundWithFallingBlock(Ground [22][12]blockShape.Block) {
 	copyGround[cursorX][cursorY] = blockShape.CursorBlock
 	blockShape.PrintArray(copyGround)
 }
-func PrintGroundWithoutFallingBlock(Ground [22][12]blockShape.Block) {
+func PrintGroundWithoutFallingBlock(Ground [22][12]blockShape.Block, FallingBlock blockShape.BlockInfo) {
 	copyGround := Ground // 현재 테트리스 판 복제해서 사용
 
 	// FallingBlock인 블록들을 빈 블록으로 대체해버리기
 	for i := 0; i < len(copyGround); i++ {
 		for j := 0; j < len(copyGround[0]); j++ {
-			if copyGround[i][j].Id == blockShape.FallingBlock.Id {
+			if copyGround[i][j].Id == FallingBlock.Id {
 				copyGround[i][j] = blockShape.Block{}
 			}
 		}
@@ -90,6 +90,6 @@ func PrintGroundWithoutFallingBlock(Ground [22][12]blockShape.Block) {
 	blockShape.PrintArray(copyGround)
 }
 
-func CheckFallingBlock(x, y int, Ground [22][12]blockShape.Block) bool {
-	return Ground[x][y].Id == blockShape.FallingBlock.Id
+func CheckFallingBlock(x, y int, Ground [22][12]blockShape.Block, FallingBlock blockShape.BlockInfo) bool {
+	return Ground[x][y].Id == FallingBlock.Id
 }

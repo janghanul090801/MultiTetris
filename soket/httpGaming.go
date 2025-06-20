@@ -25,6 +25,11 @@ type NgrokTunnels struct {
 	Tunnels []NgrokTunnel `json:"tunnels"`
 }
 
+type GameState struct {
+	Ground       [22][12]blockShape.Block `json:"ground"`
+	FallingBlock blockShape.BlockInfo     `json:"falling_block"`
+}
+
 var cmd *exec.Cmd
 var WaitConnect = make(chan struct{})
 
@@ -110,7 +115,8 @@ func StartServerSide() {
 		if string(body) == "" {
 			goto RETURN
 		}
-		attackSuccess = strings.Split(string(body), ",")[1]
+		attackSuccess = strings.Split(string(body), ",")[2]
+		fmt.Println(string(body))
 
 		if attackSuccess == "1" {
 			blockShape.DeleteFallingBlock()
@@ -133,12 +139,16 @@ func StartServerSide() {
 			blockShape.PrintArray(blockShape.Ground)
 		}
 	RETURN:
-		GroundJson, err := json.Marshal(blockShape.Ground)
+		state := GameState{
+			Ground:       blockShape.Ground,
+			FallingBlock: blockShape.FallingBlock,
+		}
+		data, err := json.Marshal(state)
 		if err != nil {
 			panic(err)
 		}
-		_, _ = w.Write(GroundJson)
-		fmt.Println("반환 완료")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
 	})
 
 	fmt.Println("서버 시작 : 8080 포트")
@@ -182,7 +192,7 @@ func ConnectServerSide() (bool, string) {
 	}
 }
 
-func GamingClientSide(url string, message string, attackSuccess bool) [22][12]blockShape.Block {
+func GamingClientSide(url string, message string, attackSuccess bool) GameState {
 	WaitClient = make(chan struct{})
 	if attackSuccess {
 		message += ",1"
@@ -199,15 +209,12 @@ func GamingClientSide(url string, message string, attackSuccess bool) [22][12]bl
 	if err != nil {
 		panic(err)
 	}
-	var bodyS [22][12]blockShape.Block
-	err = json.Unmarshal(body, &bodyS)
-	if err != nil {
+	var state GameState
+	if err := json.Unmarshal(body, &state); err != nil {
 		panic(err)
 	}
-
 	close(WaitClient)
-
-	return bodyS
+	return state
 }
 func SendUserData(url string, u user.User) {
 	data, err := json.Marshal(u) // 이것은 User 구조체 데이터에 작성한 `json:"머시기"`에 맞춰 json 데이터로 바꿔주는 멋있는 함수

@@ -16,7 +16,7 @@ type Block struct {
 	direction rune // 상t하b좌l우r
 }
 
-type blockInfo struct {
+type BlockInfo struct {
 	Id        int
 	i         int // 해당 블럭의 가장 왼쪽(j), 가장 위쪽(i)
 	j         int
@@ -34,7 +34,7 @@ var CursorBlock = Block{-1, -1, false, false, 't'}
 var GlobalBlockId = 1
 
 // 지금 떨어지고 있는 블럭의 정보 객체
-var FallingBlock blockInfo
+var FallingBlock BlockInfo
 
 // 게임판
 var Ground [22][12]Block
@@ -343,7 +343,7 @@ OUT:
 				Ground[i][j].isFalling = false
 				count++
 				if count == 4 {
-					FallingBlock = blockInfo{}
+					FallingBlock = BlockInfo{}
 					break OUT
 				}
 			}

@@ -39,10 +39,11 @@ func main() {
 		defer keyboard.Close()
 
 		if isConnected {
-			Ground := soket.GamingClientSide(url, ",", false)
+			gameState := soket.GamingClientSide(url, ",", false)
+
 			for {
-				s, b := attack.Attack(Ground)
-				soket.GamingClientSide(url, s, b)
+				s, b := attack.Attack(gameState.Ground, gameState.FallingBlock)
+				gameState = soket.GamingClientSide(url, s, b)
 				<-soket.WaitClient
 			}
 		}

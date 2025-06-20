@@ -22,9 +22,6 @@ func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) 
 	_ = keyboard.Open()
 
 	for {
-		//fmt.Print("\033[H")
-		//fmt.Printf("\033[%d;0H", len(blockShape.Ground)+3)
-
 		PrintGroundWithoutFallingBlock(Ground, FallingBlock)
 		ch, _, err := keyboard.GetKey()
 		if err != nil {
@@ -52,10 +49,8 @@ func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) 
 		case 'f':
 			// 선택 완료 시 처리
 			if CheckFallingBlock(cursorX, cursorY, Ground, FallingBlock) {
-				//fmt.Printf("\033[%d;0H", len(blockShape.Ground))
 				fmt.Println("수비 성공! : 대단하시네요 ")
 				PrintGroundWithFallingBlock(Ground)
-				// blockShape.DeleteFallingBlock() 이거 서버로 옮기기
 				user.Me.AttackSuccess()
 				return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), true
 			} else {

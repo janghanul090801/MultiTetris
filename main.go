@@ -12,8 +12,6 @@ import (
 )
 
 func main() {
-	blockShape.InitEnv()
-	blockShape.PrintArray(blockShape.Ground)
 	fmt.Println("1 -> 서버 테스트 실행")
 	var ch string
 	fmt.Scanln(&ch)
@@ -60,6 +58,7 @@ func main() {
 			for {
 				s, b := attack.Attack(gameState.Ground, gameState.FallingBlock)
 				gameState = soket.GamingClientSide(url, s, b)
+				fmt.Println("서버턴 대기중....")
 				<-soket.WaitClient
 			}
 		}

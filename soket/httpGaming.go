@@ -99,13 +99,11 @@ func StartServerSide() {
 		}
 		blockShape.FallingDown()
 		body, _ := io.ReadAll(r.Body)
-		fmt.Println("클라 메시지:", string(body))
 		var attackSuccess string
 		if string(body) == "" {
 			goto RETURN
 		}
 		attackSuccess = strings.Split(string(body), ",")[2]
-		fmt.Println(string(body))
 
 		if attackSuccess == "1" {
 			blockShape.DeleteFallingBlock()
@@ -138,6 +136,7 @@ func StartServerSide() {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
+		fmt.Println("클라이언트턴 대기중...")
 	})
 
 	http.HandleFunc("/end", func(w http.ResponseWriter, r *http.Request) {

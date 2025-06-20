@@ -416,7 +416,7 @@ func Move(q rune) {
 		RotateBlock(-1)
 	}
 }
-func DeleteFallingBlock() { //수비 성공시 FallingBlock 삭제
+func DeleteFallingBlock() {
 	for i := FallingBlock.i; i < FallingBlock.i+4 && i < len(Ground); i++ {
 		for j := FallingBlock.j; j < FallingBlock.j+4 && j < len(Ground[0]); j++ {
 			if Ground[i][j].Id == FallingBlock.Id {
@@ -424,7 +424,7 @@ func DeleteFallingBlock() { //수비 성공시 FallingBlock 삭제
 			}
 		}
 	}
-	FallingBlock = blockInfo{} // FallingBlock 초기화
+	CreateBlockGroup(5, rand.Intn(6)+1, 't') // FallingBlock 초기화
 }
 
 func CanRotate(q int) bool {

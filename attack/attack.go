@@ -60,7 +60,6 @@ func Attack(Ground [22][12]blockShape.Block) (string, bool) {
 				// blockShape.DeleteFallingBlock() 이거 서버로 옮기기
 				return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), true
 			} else {
-				//fmt.Printf("\033[%d;0H", len(blockShape.Ground))
 				fmt.Println("공격에 실패하셨습니다\n 현재 블록의 위치:")
 				PrintGroundWithFallingBlock(Ground)
 				return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false

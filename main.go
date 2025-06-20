@@ -41,8 +41,9 @@ func main() {
 		if isConnected {
 			Ground := soket.GamingClientSide(url, ",", false)
 			for {
-				b := attack.Attack(Ground)
-				soket.GamingClientSide(url, "", b)
+				s, b := attack.Attack(Ground)
+				soket.GamingClientSide(url, s, b)
+				<-soket.WaitClient
 			}
 		}
 

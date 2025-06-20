@@ -108,7 +108,7 @@ func StartServerSide() {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
-
+		blockShape.FallingDown()
 		body, _ := io.ReadAll(r.Body)
 		fmt.Println("클라 메시지:", string(body))
 		var attackSuccess string
@@ -133,7 +133,6 @@ func StartServerSide() {
 
 			blockShape.Move(ch)
 			if ch == 'f' {
-				blockShape.FallingDown()
 				break
 			}
 			blockShape.PrintArray(blockShape.Ground)

@@ -419,8 +419,12 @@ func Move(q rune) {
 func DeleteFallingBlock() {
 	for i := FallingBlock.i; i < FallingBlock.i+4 && i < len(Ground); i++ {
 		for j := FallingBlock.j; j < FallingBlock.j+4 && j < len(Ground[0]); j++ {
-			if Ground[i][j].Id == FallingBlock.Id {
-				Ground[i][j] = NoneBlock
+			jj := j
+			if j < 0 {
+				jj = 0
+			}
+			if Ground[i][jj].Id == FallingBlock.Id {
+				Ground[i][jj] = NoneBlock
 			}
 		}
 	}

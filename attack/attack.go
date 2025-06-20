@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/eiannone/keyboard"
 	"strconv"
+	"time"
 )
 
 // Coordinate 입력받을 좌표
@@ -17,52 +18,66 @@ type Coordinate struct {
 var cursorX, cursorY int = 0, 0
 
 func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) (string, bool) {
-
 	fmt.Println("GoGoGo")
 	_ = keyboard.Open()
 
 	for {
 		PrintGroundWithoutFallingBlock(Ground, FallingBlock)
-		ch, _, err := keyboard.GetKey()
-		if err != nil {
+
+		inputChan := make(chan rune)
+		errChan := make(chan error)
+
+		go func() {
+			ch, _, err := keyboard.GetKey()
+			if err != nil {
+				errChan <- err
+				return
+			}
+			inputChan <- ch
+		}()
+
+		// 5초 타이머 설정
+		select {
+		case err := <-errChan:
 			fmt.Println("키 입력 에러:", err)
-			break
-		}
+			return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
+		case ch := <-inputChan:
+			switch ch {
+			case 'w':
+				if cursorX > 0 {
+					cursorX--
+				}
+			case 's':
+				if cursorX < len(Ground)-1 {
+					cursorX++
+				}
+			case 'a':
+				if cursorY > 0 {
+					cursorY--
+				}
+			case 'd':
+				if cursorY < len(Ground[0])-1 {
+					cursorY++
+				}
+			case 'f':
+				if CheckFallingBlock(cursorX, cursorY, Ground, FallingBlock) {
+					fmt.Println("공격 성공! : 대단하시네요 ")
+					PrintGroundWithFallingBlock(Ground)
+					user.Me.AttackSuccess()
+					return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), true
+				} else {
+					fmt.Println("공격에 실패하셨습니다\n 현재 블록의 위치:")
+					PrintGroundWithFallingBlock(Ground)
+					user.Me.AttackFailed()
 
-		switch ch {
-		case 'w':
-			if cursorX > 0 {
-				cursorX--
+					return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
+				}
 			}
-		case 's':
-			if cursorX < len(Ground)-1 {
-				cursorX++
-			}
-		case 'a':
-			if cursorY > 0 {
-				cursorY--
-			}
-		case 'd':
-			if cursorY < len(Ground[0])-1 {
-				cursorY++
-			}
-		case 'f':
-			// 선택 완료 시 처리
-			if CheckFallingBlock(cursorX, cursorY, Ground, FallingBlock) {
-				fmt.Println("수비 성공! : 대단하시네요 ")
-				PrintGroundWithFallingBlock(Ground)
-				user.Me.AttackSuccess()
-				return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), true
-			} else {
-				fmt.Println("공격에 실패하셨습니다\n 현재 블록의 위치:")
-				PrintGroundWithFallingBlock(Ground)
-				user.Me.AttackFailed()
-
-				return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
-			}
+		case <-time.After(5 * time.Second):
+			fmt.Println("시간 초과! 공격 실패.")
+			return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
 		}
 	}
-	return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
 }
 func PrintGroundWithFallingBlock(Ground [10][10]blockShape.Block) {
 	copyGround := Ground

@@ -114,19 +114,40 @@ func StartServerSide() {
 		blockShape.PrintArray(blockShape.Ground)
 		for {
 			fmt.Print("서버 입력: ")
-			ch, key, err := keyboard.GetKey()
-			if err != nil {
-				panic(err)
-			}
-			if key == keyboard.KeyEsc {
-				os.Exit(0)
-			}
+			inputChan := make(chan rune)
+			keyChan := make(chan keyboard.Key)
+			errChan := make(chan error)
 
-			blockShape.Move(ch)
-			if ch == 'f' {
+			// 키보드 입력을 비동기적으로 처리
+			go func() {
+				ch, key, err := keyboard.GetKey()
+				if err != nil {
+					errChan <- err
+					return
+				}
+				inputChan <- ch
+				keyChan <- key
+			}()
+
+			// 5초 타이머 설정
+			select {
+			case err := <-errChan:
+				panic(err)
+			case key := <-keyChan:
+				if key == keyboard.KeyEsc {
+					os.Exit(0)
+				}
+			case ch := <-inputChan:
+				blockShape.Move(ch)
+				if ch == 'f' {
+					break
+				}
+				blockShape.PrintArray(blockShape.Ground)
+			case <-time.After(5 * time.Second):
+				fmt.Println("\n시간 초과!")
 				break
 			}
-			blockShape.PrintArray(blockShape.Ground)
+
 		}
 	RETURN:
 		state := GameState{

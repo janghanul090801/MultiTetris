@@ -39,7 +39,7 @@ func main() {
 		defer keyboard.Close()
 
 		if isConnected {
-			Ground := soket.GamingClientSide(url, "_", false)
+			Ground := soket.GamingClientSide(url, ",", false)
 			for {
 				s, b := attack.Attack(Ground)
 				soket.GamingClientSide(url, s, b)

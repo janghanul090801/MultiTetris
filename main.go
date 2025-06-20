@@ -7,6 +7,7 @@ import (
 	"MultiTetris/user"
 	"fmt"
 	"github.com/eiannone/keyboard"
+	"github.com/inancgumus/screen"
 	"os"
 	"time"
 )
@@ -58,6 +59,7 @@ func main() {
 			for {
 				s, b := attack.Attack(gameState.Ground, gameState.FallingBlock)
 				gameState = soket.GamingClientSide(url, s, b)
+				screen.Clear()
 				fmt.Println("서버턴 대기중....")
 				<-soket.WaitClient
 			}

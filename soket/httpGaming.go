@@ -97,12 +97,15 @@ func StartServerSide() {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
-		blockShape.FallingDown()
+
 		body, _ := io.ReadAll(r.Body)
 		var attackSuccess string
-		if string(body) == "" {
+		if string(body) == ",,0" {
 			goto RETURN
 		}
+
+		blockShape.FallingDown()
+
 		attackSuccess = strings.Split(string(body), ",")[2]
 
 		if attackSuccess == "1" {
@@ -150,7 +153,9 @@ func StartServerSide() {
 		log.Printf("받은 user data: %+v\n", u)
 		user.Other = u
 
-		w.Write([]byte("OK")) // 잘 받았다고 상대한테 OK 사인 보내주는 함수
+		j, err := json.Marshal(user.Me)
+
+		w.Write(j)
 		close(WaitEnd)
 	})
 
@@ -230,5 +235,14 @@ func SendUserData(url string, u user.User) {
 		log.Fatal("http.Post에서 에러가 나요ㅠㅠ", err)
 	}
 	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
 
+	var other user.User
+	if err := json.Unmarshal(body, &other); err != nil {
+		panic(err)
+	}
+	user.Other = other
 }

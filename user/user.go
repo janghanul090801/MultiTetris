@@ -15,11 +15,6 @@ var (
 	Other = User{}
 )
 
-func InitUser() { //이거 필요한가?
-	Me = User{}
-	Other = User{}
-}
-
 // 줄 제거 시 점수 증가
 func (u *User) LineClearSuccess(lines int) {
 	u.Lines += lines

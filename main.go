@@ -20,7 +20,7 @@ func main() {
 		}
 		defer keyboard.Close()
 		soket.GetUrl()
-		soket.StartServerSide() // <- 여기서 gaming 핸들러도 같이 등록됨
+		soket.StartServerSide()
 
 		blockShape.InitEnv()
 
@@ -43,7 +43,7 @@ func main() {
 			for {
 				s, b := attack.Attack(Ground)
 				soket.GamingClientSide(url, s, b)
-				<-soket.WaitConnect
+				<-soket.WaitClient
 			}
 		}
 

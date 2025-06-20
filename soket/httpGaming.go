@@ -175,6 +175,7 @@ func ConnectServerSide() (bool, string) {
 }
 
 func GamingClientSide(url string, message string, attackSuccess bool) [22][12]blockShape.Block {
+	WaitConnect = make(chan struct{})
 	if attackSuccess {
 		message += ",1"
 	} else {

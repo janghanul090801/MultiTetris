@@ -26,7 +26,7 @@ type NgrokTunnels struct {
 }
 
 type GameState struct {
-	Ground       [22][12]blockShape.Block `json:"ground"`
+	Ground       [10][10]blockShape.Block `json:"ground"`
 	FallingBlock blockShape.BlockInfo     `json:"falling_block"`
 }
 
@@ -34,18 +34,7 @@ var cmd *exec.Cmd
 var WaitConnect = make(chan struct{})
 
 var WaitClient = make(chan struct{})
-
-//func main() {
-//	getUrl()
-//	go StartServerSide()
-//
-//	ConnectServerSide()
-//
-//	//StartServerSide()
-//	fmt.Println("Kill ngrok")
-//	_ = cmd.Process.Kill()
-//	_ = cmd.Wait()
-//}
+var WaitEnd = make(chan struct{})
 
 func GetUrl() {
 	cmd = exec.Command("soket/ngrok.exe", "http", "8080")
@@ -121,6 +110,7 @@ func StartServerSide() {
 		if attackSuccess == "1" {
 			blockShape.DeleteFallingBlock()
 		}
+		blockShape.PrintArray(blockShape.Ground)
 		for {
 			fmt.Print("서버 입력: ")
 			ch, key, err := keyboard.GetKey()
@@ -148,6 +138,21 @@ func StartServerSide() {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
+	})
+
+	http.HandleFunc("/end", func(w http.ResponseWriter, r *http.Request) {
+		var u user.User
+		err := json.NewDecoder(r.Body).Decode(&u) //NewDecoder로 JSON 파일로 읽고 User 타임으로 바꿔주는 엄청난 함수
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest) // 실패;
+			return
+		}
+
+		log.Printf("받은 user data: %+v\n", u)
+		user.Other = u
+
+		w.Write([]byte("OK")) // 잘 받았다고 상대한테 OK 사인 보내주는 함수
+		close(WaitEnd)
 	})
 
 	fmt.Println("서버 시작 : 8080 포트")
@@ -221,23 +226,10 @@ func SendUserData(url string, u user.User) {
 		log.Fatal("json.Marshal에서 에러가 나요ㅠㅠ", err)
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	resp, err := http.Post(url+"end", "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		log.Fatal("http.Post에서 에러가 나요ㅠㅠ", err)
 	}
 	defer resp.Body.Close()
 
-}
-func UserDataPostHandler(w http.ResponseWriter, r *http.Request) {
-
-	var u user.User
-	err := json.NewDecoder(r.Body).Decode(&u) //NewDecoder로 JSON 파일로 읽고 User 타임으로 바꿔주는 엄청난 함수
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest) // 실패;
-		return
-	}
-
-	log.Printf("받은 user data: %+v\n", u)
-
-	w.Write([]byte("OK")) // 잘 받았다고 상대한테 OK 사인 보내주는 함수
 }

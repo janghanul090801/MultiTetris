@@ -4,8 +4,11 @@ import (
 	"MultiTetris/attack"
 	"MultiTetris/blockShape"
 	"MultiTetris/soket"
+	"MultiTetris/user"
 	"fmt"
 	"github.com/eiannone/keyboard"
+	"os"
+	"time"
 )
 
 func main() {
@@ -25,7 +28,14 @@ func main() {
 		blockShape.InitEnv()
 
 		<-soket.WaitConnect // 서버로부터 connect 수신 대기
+		go func() {
+			time.Sleep(3 * time.Minute)
 
+			<-soket.WaitEnd
+			user.Me.PrintScore()
+			user.Other.PrintScore()
+			os.Exit(0)
+		}()
 		blockShape.PrintArray(blockShape.Ground)
 
 		// 서버는 계속 대기
@@ -40,7 +50,13 @@ func main() {
 
 		if isConnected {
 			gameState := soket.GamingClientSide(url, ",", false)
-
+			go func() {
+				time.Sleep(3 * time.Minute)
+				soket.SendUserData(url, user.Me)
+				user.Me.PrintScore()
+				user.Other.PrintScore()
+				os.Exit(0)
+			}()
 			for {
 				s, b := attack.Attack(gameState.Ground, gameState.FallingBlock)
 				gameState = soket.GamingClientSide(url, s, b)

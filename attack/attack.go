@@ -16,7 +16,7 @@ type Coordinate struct {
 
 var cursorX, cursorY int = 0, 0
 
-func Attack(Ground [22][12]blockShape.Block, FallingBlock blockShape.BlockInfo) (string, bool) {
+func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) (string, bool) {
 
 	fmt.Println("GoGoGo")
 	_ = keyboard.Open()
@@ -69,12 +69,12 @@ func Attack(Ground [22][12]blockShape.Block, FallingBlock blockShape.BlockInfo) 
 	}
 	return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
 }
-func PrintGroundWithFallingBlock(Ground [22][12]blockShape.Block) {
+func PrintGroundWithFallingBlock(Ground [10][10]blockShape.Block) {
 	copyGround := Ground
 	copyGround[cursorX][cursorY] = blockShape.CursorBlock
 	blockShape.PrintArray(copyGround)
 }
-func PrintGroundWithoutFallingBlock(Ground [22][12]blockShape.Block, FallingBlock blockShape.BlockInfo) {
+func PrintGroundWithoutFallingBlock(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) {
 	copyGround := Ground // 현재 테트리스 판 복제해서 사용
 
 	// FallingBlock인 블록들을 빈 블록으로 대체해버리기
@@ -90,6 +90,6 @@ func PrintGroundWithoutFallingBlock(Ground [22][12]blockShape.Block, FallingBloc
 	blockShape.PrintArray(copyGround)
 }
 
-func CheckFallingBlock(x, y int, Ground [22][12]blockShape.Block, FallingBlock blockShape.BlockInfo) bool {
+func CheckFallingBlock(x, y int, Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) bool {
 	return Ground[x][y].Id == FallingBlock.Id
 }

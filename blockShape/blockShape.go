@@ -1,8 +1,10 @@
 package blockShape
 
 import (
+	"MultiTetris/user"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/inancgumus/screen"
 	"math"
 	"math/rand"
 	"time"
@@ -37,7 +39,7 @@ var GlobalBlockId = 1
 var FallingBlock BlockInfo
 
 // 게임판
-var Ground [22][12]Block
+var Ground [10][10]Block
 
 var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -68,8 +70,8 @@ var RotationRune = [4]rune{'t', 'r', 'b', 'l'}
 var globalRotateNum = 0
 
 // 게임판 출력해주는거
-func PrintArray(a [22][12]Block) {
-	// screen.Clear()
+func PrintArray(a [10][10]Block) {
+	screen.Clear()
 	fmt.Println()
 	for _, i := range a {
 		for _, j := range i {
@@ -479,6 +481,7 @@ func ClearLine(ii int) {
 	for j := 0; j < len(Ground[0]); j++ {
 		Ground[0][j] = Block{typeId: 0}
 	}
+	user.Me.LineClearSuccess(1)
 }
 
 func CheckLine() {

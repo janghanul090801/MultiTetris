@@ -14,6 +14,16 @@ type Coordinate struct {
 	Y int
 }
 
+var Wasd = [8]Coordinate{
+	{0, 1},
+	{0, -1},
+	{-1, 0},
+	{1, 0},
+	{1, -1},
+	{1, 1},
+	{-1, -1},
+	{-1, 1},
+}
 var cursorX, cursorY int = 0, 0
 var InputChan = make(chan rune)
 var ErrChan = make(chan error)
@@ -38,19 +48,19 @@ func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo, 
 			inputTimer.Stop()
 			switch ch {
 			case 'w':
-				if cursorX > 0 {
+				if isCanMoveCursor(Ground, -1, 0) {
 					cursorX--
 				}
 			case 's':
-				if cursorX < len(Ground)-1 {
+				if isCanMoveCursor(Ground, 1, 0) {
 					cursorX++
 				}
 			case 'a':
-				if cursorY > 0 {
+				if isCanMoveCursor(Ground, 0, -1) {
 					cursorY--
 				}
 			case 'd':
-				if cursorY < len(Ground[0])-1 {
+				if isCanMoveCursor(Ground, 0, 1) {
 					cursorY++
 				}
 			case 'f':
@@ -62,6 +72,30 @@ func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo, 
 			return isAttackSuccessful(Ground, FallingBlock)
 		}
 	}
+}
+func isCanMoveCursor(Ground [10][10]blockShape.Block, dx, dy int) bool {
+	newX := cursorX + dx
+	newY := cursorY + dy
+
+	if newX < 0 || newX >= len(Ground) || newY < 0 || newY >= len(Ground[0]) {
+		return false
+	}
+
+	// 블록 존재 여부 체크
+
+	for _, dir := range Wasd {
+		checkX := newX + dir.X
+		checkY := newY + dir.Y
+
+		// 경계 내에 있는 경우에만 체크
+		if checkX >= 0 && checkX < len(Ground) && checkY >= 0 && checkY < len(Ground[0]) {
+			// 블록이 있고 떨어지는 블록이 아닌 경우
+			if Ground[checkX][checkY].Id != 0 && Ground[checkX][checkY].Id != blockShape.FallingBlock.Id {
+				return false
+			}
+		}
+	}
+	return Ground[newX][newY].Id == 0 || Ground[newX][newY].Id == blockShape.FallingBlock.Id
 }
 func isAttackSuccessful(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) (string, bool) {
 	if CheckFallingBlock(cursorX, cursorY, Ground, FallingBlock) {

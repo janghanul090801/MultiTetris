@@ -16,32 +16,41 @@ type Coordinate struct {
 }
 
 var cursorX, cursorY int = 0, 0
+var inputChan = make(chan rune)
+var errChan = make(chan error)
 
-func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) (string, bool) {
-	fmt.Println("GoGoGo")
-	_ = keyboard.Open()
-
-	for {
-		PrintGroundWithoutFallingBlock(Ground, FallingBlock)
-
-		inputChan := make(chan rune)
-		errChan := make(chan error)
-
-		go func() {
+func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo, timeoutChan <-chan bool) (string, bool) {
+	if err := keyboard.Open(); err != nil {
+		panic(err)
+	}
+	defer keyboard.Close()
+	var inputTimer *time.Timer
+	go func() {
+		for {
 			ch, _, err := keyboard.GetKey()
 			if err != nil {
 				errChan <- err
 				return
 			}
 			inputChan <- ch
-		}()
+		}
+	}()
 
-		// 5초 타이머 설정
+	for {
+		PrintGroundWithoutFallingBlock(Ground, FallingBlock)
+		inputTimer = time.NewTimer(5 * time.Second)
+		defer inputTimer.Stop()
 		select {
+		case <-timeoutChan:
+			fmt.Println("\n전체 게임 시간 종료!")
+			return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
+
 		case err := <-errChan:
 			fmt.Println("키 입력 에러:", err)
 			return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
+
 		case ch := <-inputChan:
+			inputTimer.Stop()
 			switch ch {
 			case 'w':
 				if cursorX > 0 {
@@ -62,15 +71,14 @@ func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) 
 			case 'f':
 				return isAttackSuccessful(Ground, FallingBlock)
 			}
-		case <-time.After(5 * time.Second):
-			fmt.Println("시간 초과!")
-			keyboard.Close()
+
+		case <-inputTimer.C:
+			fmt.Println("\n입력 시간 초과 : 자동 턴 종료")
 			return isAttackSuccessful(Ground, FallingBlock)
 		}
 	}
 }
 func isAttackSuccessful(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) (string, bool) {
-
 	if CheckFallingBlock(cursorX, cursorY, Ground, FallingBlock) {
 		fmt.Println("공격 성공! : 대단하시네요 ")
 		PrintGroundWithFallingBlock(Ground)
@@ -103,6 +111,7 @@ func PrintGroundWithoutFallingBlock(Ground [10][10]blockShape.Block, FallingBloc
 	//현재 선택중인 커서 위치 설정
 	copyGround[cursorX][cursorY] = blockShape.CursorBlock
 	blockShape.PrintArray(copyGround)
+
 }
 
 func CheckFallingBlock(x, y int, Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) bool {

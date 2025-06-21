@@ -43,22 +43,20 @@ func main() {
 	} else if ch == "2" {
 		isConnected, url := soket.ConnectServerSide()
 
-		if err := keyboard.Open(); err != nil {
-			panic(err)
-		}
-		defer keyboard.Close()
-
 		if isConnected {
 			gameState := soket.GamingClientSide(url, ",", false)
+			timeoutChan := make(chan bool)
+
 			go func() {
 				time.Sleep(3 * time.Minute)
+				timeoutChan <- true
 				soket.SendUserData(url, user.Me)
 				user.Me.PrintScore()
 				user.Other.PrintScore()
 				os.Exit(0)
 			}()
 			for {
-				s, b := attack.Attack(gameState.Ground, gameState.FallingBlock)
+				s, b := attack.Attack(gameState.Ground, gameState.FallingBlock, timeoutChan)
 				fmt.Println("서버턴 대기중....")
 				gameState = soket.GamingClientSide(url, s, b)
 				screen.Clear()

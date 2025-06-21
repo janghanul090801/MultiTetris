@@ -4,7 +4,6 @@ import (
 	"MultiTetris/blockShape"
 	"MultiTetris/user"
 	"fmt"
-	"github.com/eiannone/keyboard"
 	"strconv"
 	"time"
 )
@@ -16,40 +15,26 @@ type Coordinate struct {
 }
 
 var cursorX, cursorY int = 0, 0
-var inputChan = make(chan rune)
-var errChan = make(chan error)
+var InputChan = make(chan rune)
+var ErrChan = make(chan error)
 
 func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo, timeoutChan <-chan bool) (string, bool) {
-	if err := keyboard.Open(); err != nil {
-		panic(err)
-	}
-	defer keyboard.Close()
 	var inputTimer *time.Timer
-	go func() {
-		for {
-			ch, _, err := keyboard.GetKey()
-			if err != nil {
-				errChan <- err
-				return
-			}
-			inputChan <- ch
-		}
-	}()
+	// 단일 키 입력 고루틴 (계속 유지)
 
 	for {
 		PrintGroundWithoutFallingBlock(Ground, FallingBlock)
 		inputTimer = time.NewTimer(5 * time.Second)
-		defer inputTimer.Stop()
 		select {
 		case <-timeoutChan:
 			fmt.Println("\n전체 게임 시간 종료!")
 			return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
 
-		case err := <-errChan:
+		case err := <-ErrChan:
 			fmt.Println("키 입력 에러:", err)
 			return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
 
-		case ch := <-inputChan:
+		case ch := <-InputChan:
 			inputTimer.Stop()
 			switch ch {
 			case 'w':
@@ -88,7 +73,6 @@ func isAttackSuccessful(Ground [10][10]blockShape.Block, FallingBlock blockShape
 		fmt.Println("공격에 실패하셨습니다\n 현재 블록의 위치:")
 		PrintGroundWithFallingBlock(Ground)
 		user.Me.AttackFailed()
-
 		return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
 	}
 }

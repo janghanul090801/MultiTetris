@@ -6,10 +6,11 @@ import (
 	"MultiTetris/soket"
 	"MultiTetris/user"
 	"fmt"
-	"github.com/eiannone/keyboard"
-	"github.com/inancgumus/screen"
 	"os"
 	"time"
+
+	"github.com/eiannone/keyboard"
+	"github.com/inancgumus/screen"
 )
 
 func main() {
@@ -44,6 +45,21 @@ func main() {
 		isConnected, url := soket.ConnectServerSide()
 
 		if isConnected {
+			if err := keyboard.Open(); err != nil {
+				panic(err)
+			}
+			defer keyboard.Close()
+
+			go func() {
+				for {
+					ch, _, err := keyboard.GetKey()
+					if err != nil {
+						attack.ErrChan <- err
+						return
+					}
+					attack.InputChan <- ch
+				}
+			}()
 			gameState := soket.GamingClientSide(url, ",", false)
 			timeoutChan := make(chan bool)
 

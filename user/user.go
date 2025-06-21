@@ -3,10 +3,11 @@ package user
 import "fmt"
 
 type User struct {
-	Points      int `json:"points"`
-	Lines       int `json:"lines"`
-	Combos      int `json:"combos"`
-	AttackCount int `json:"attackcount"`
+	Status      string `json:"status"`
+	Points      int    `json:"points"`
+	Lines       int    `json:"lines"`
+	Combos      int    `json:"combos"`
+	AttackCount int    `json:"attackcount"`
 }
 
 // 현재 플레이어와 상대
@@ -35,6 +36,12 @@ func (u *User) AttackFailed() {
 
 func (u *User) PrintScore() {
 	fmt.Println("Points:", u.Points)
-	fmt.Println("Lines:", u.Lines)
+	if u.Status == "1" {
+		fmt.Println("Lines:", u.Lines)
+	}
+	if u.Status == "2" {
+		fmt.Println("AttackCount: ", u.AttackCount)
+		fmt.Println("Combo: ", u.Combos)
+	}
 
 }

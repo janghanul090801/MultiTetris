@@ -16,6 +16,7 @@ func main() {
 	fmt.Println("1 -> 서버 테스트 실행")
 	var ch string
 	fmt.Scanln(&ch)
+	user.Me.Status = ch
 	if ch == "1" {
 		if err := keyboard.Open(); err != nil {
 			panic(err)

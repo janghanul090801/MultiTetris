@@ -55,6 +55,21 @@ func main() {
 		isConnected, url := soket.ConnectServerSide()
 
 		if isConnected {
+			if err := keyboard.Open(); err != nil {
+				panic(err)
+			}
+			defer keyboard.Close()
+
+			go func() {
+				for {
+					ch, _, err := keyboard.GetKey()
+					if err != nil {
+						panic(err)
+					}
+					attack.InputChan <- ch
+				}
+			}()
+
 			gameState := soket.GamingClientSide(url, ",", false)
 			timeoutChan := make(chan bool)
 

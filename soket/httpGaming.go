@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/eiannone/keyboard"
 	"io"
 	"log"
 	"net/http"
@@ -15,6 +14,8 @@ import (
 	"os/signal"
 	"strings"
 	"time"
+
+	"github.com/eiannone/keyboard"
 )
 
 type NgrokTunnel struct {
@@ -32,9 +33,11 @@ type GameState struct {
 
 var cmd *exec.Cmd
 var WaitConnect = make(chan struct{})
-
 var WaitClient = make(chan struct{})
 var WaitEnd = make(chan struct{})
+var InputChan = make(chan rune)
+var KeyChan = make(chan keyboard.Key)
+var ErrChan = make(chan error)
 
 func GetUrl() {
 	cmd = exec.Command("soket/ngrok.exe", "http", "8080")
@@ -113,31 +116,15 @@ func StartServerSide() {
 		}
 		blockShape.PrintArray(blockShape.Ground)
 		for {
-			fmt.Print("서버 입력: ")
-			inputChan := make(chan rune)
-			keyChan := make(chan keyboard.Key)
-			errChan := make(chan error)
-
-			// 키보드 입력을 비동기적으로 처리
-			go func() {
-				ch, key, err := keyboard.GetKey()
-				if err != nil {
-					errChan <- err
-					return
-				}
-				inputChan <- ch
-				keyChan <- key
-			}()
-
 			// 5초 타이머 설정
 			select {
-			case err := <-errChan:
+			case err := <-ErrChan:
 				panic(err)
-			case key := <-keyChan:
+			case key := <-KeyChan:
 				if key == keyboard.KeyEsc {
 					os.Exit(0)
 				}
-			case ch := <-inputChan:
+			case ch := <-InputChan:
 				//fmt.Printf("처리되는 키: %c (ASCII: %d)\n", ch, ch) // 디버깅용 로그 추가
 				blockShape.Move(ch)
 				if ch == 'f' {
@@ -146,7 +133,6 @@ func StartServerSide() {
 				blockShape.PrintArray(blockShape.Ground)
 			case <-time.After(5 * time.Second):
 				fmt.Println("\n시간 초과!")
-				keyboard.Close()
 				blockShape.PrintArray(blockShape.Ground)
 				goto RETURN
 			}
@@ -174,7 +160,6 @@ func StartServerSide() {
 			return
 		}
 
-		log.Printf("받은 user data: %+v\n", u)
 		user.Other = u
 
 		j, err := json.Marshal(user.Me)

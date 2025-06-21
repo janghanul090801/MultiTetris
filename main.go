@@ -30,9 +30,21 @@ func main() {
 
 		<-soket.WaitConnect // 서버로부터 connect 수신 대기
 		go func() {
+			for {
+				ch, key, err := keyboard.GetKey()
+				if err != nil {
+					soket.ErrChan <- err
+					continue
+				}
+				soket.InputChan <- ch
+				soket.KeyChan <- key
+			}
+		}()
+		go func() {
 			time.Sleep(3 * time.Minute)
 
 			<-soket.WaitEnd
+			fmt.Println("전체 게임 시간 종료!")
 			user.Me.PrintScore()
 			user.Other.PrintScore()
 			os.Exit(0)

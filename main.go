@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	fmt.Println("1 -> 서버 테스트 실행")
+	fmt.Println("1 -> 서버, 2 -> 클라이언트")
 	var ch string
 	fmt.Scanln(&ch)
 	user.Me.Status = ch

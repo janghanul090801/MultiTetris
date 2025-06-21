@@ -51,7 +51,7 @@ func CreateBlock(typeId int) Block {
 // 블럭 타입 아이디 별로 컬러 지정한거임
 var blockColorMap = map[int]*color.Color{
 	-1: color.New(color.BgRed),
-	0:  color.New(color.BgBlack),
+	0:  color.New(color.BgHiBlack),
 	1:  color.New(color.BgCyan),
 	2:  color.New(color.BgHiRed),
 	3:  color.New(color.BgMagenta),
@@ -64,16 +64,13 @@ var blockColorMap = map[int]*color.Color{
 // [타입아이디-1][direction]으로 넣으면 블럭모양 [4][4] 로 가져올 수 있음
 var blockShapeList [7]map[rune][4][4]Block
 
-// 회전 관련
-var RotationRune = [4]rune{'t', 'r', 'b', 'l'}
-var globalRotateNum = 0
-
 // 게임판 출력해주는거
 func PrintArray(a [10][10]Block) {
 	screen.Clear()
 	fmt.Println()
 	for _, i := range a {
 		for _, j := range i {
+
 			_, _ = blockColorMap[j.TypeId].Print("  ")
 
 		}
@@ -240,9 +237,9 @@ func CreateBlockGroup(j int, blockType int, d rune) {
 	iiP := 0
 	for iP := range 4 {
 		for jP := range 4 {
-			Ground[0+iP+iiP][j+jP] = blockShapeList[blockType-1][d][iP][jP]
-			Ground[0+iP+iiP][j+jP].Id = GlobalBlockId
 			if blockShapeList[blockType-1][d][iP][jP].TypeId != 0 {
+				Ground[0+iP+iiP][j+jP] = blockShapeList[blockType-1][d][iP][jP]
+				Ground[0+iP+iiP][j+jP].Id = GlobalBlockId
 				count++
 			}
 		}
@@ -430,6 +427,7 @@ func DeleteFallingBlock() {
 		}
 	}
 	CreateBlockGroup(5, rand.Intn(6)+1, 't') // FallingBlock 초기화
+	fmt.Println("공격에 당했습니다!")
 }
 
 func getNextDirection(current rune, q int) rune {

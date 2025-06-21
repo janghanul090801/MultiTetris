@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	fmt.Println("1 -> 서버 테스트 실행")
+	fmt.Println("1 -> 서버, 2 -> 클라이언트")
 	var ch string
 	fmt.Scanln(&ch)
 	user.Me.Status = ch
@@ -43,6 +43,7 @@ func main() {
 			time.Sleep(3 * time.Minute)
 
 			<-soket.WaitEnd
+			fmt.Println("전체 게임 시간 종료!")
 			user.Me.PrintScore()
 			user.Other.PrintScore()
 			os.Exit(0)

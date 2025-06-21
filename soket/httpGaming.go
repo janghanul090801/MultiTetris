@@ -115,8 +115,6 @@ func StartServerSide() {
 		}
 		blockShape.PrintArray(blockShape.Ground)
 		for {
-			fmt.Print("서버 입력: ")
-
 			// 5초 타이머 설정
 			select {
 			case err := <-ErrChan:
@@ -161,7 +159,6 @@ func StartServerSide() {
 			return
 		}
 
-		log.Printf("받은 user data: %+v\n", u)
 		user.Other = u
 
 		j, err := json.Marshal(user.Me)

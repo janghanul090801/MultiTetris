@@ -16,15 +16,12 @@ type Coordinate struct {
 }
 
 var cursorX, cursorY int = 0, 0
-var inputChan = make(chan rune)
-var errChan = make(chan error)
 
 func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo, timeoutChan <-chan bool) (string, bool) {
-	if err := keyboard.Open(); err != nil {
-		panic(err)
-	}
-	defer keyboard.Close()
+	inputChan := make(chan rune)
+	errChan := make(chan error)
 	var inputTimer *time.Timer
+	// 단일 키 입력 고루틴 (계속 유지)
 	go func() {
 		for {
 			ch, _, err := keyboard.GetKey()
@@ -39,7 +36,6 @@ func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo, 
 	for {
 		PrintGroundWithoutFallingBlock(Ground, FallingBlock)
 		inputTimer = time.NewTimer(5 * time.Second)
-		defer inputTimer.Stop()
 		select {
 		case <-timeoutChan:
 			fmt.Println("\n전체 게임 시간 종료!")
@@ -88,7 +84,6 @@ func isAttackSuccessful(Ground [10][10]blockShape.Block, FallingBlock blockShape
 		fmt.Println("공격에 실패하셨습니다\n 현재 블록의 위치:")
 		PrintGroundWithFallingBlock(Ground)
 		user.Me.AttackFailed()
-
 		return strconv.Itoa(cursorX) + "," + strconv.Itoa(cursorY), false
 	}
 }

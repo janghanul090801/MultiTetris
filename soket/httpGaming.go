@@ -32,9 +32,11 @@ type GameState struct {
 
 var cmd *exec.Cmd
 var WaitConnect = make(chan struct{})
-
 var WaitClient = make(chan struct{})
 var WaitEnd = make(chan struct{})
+var InputChan = make(chan rune)
+var KeyChan = make(chan keyboard.Key)
+var ErrChan = make(chan error)
 
 func GetUrl() {
 	cmd = exec.Command("soket/ngrok.exe", "http", "8080")
@@ -77,37 +79,19 @@ func GetUrl() {
 }
 
 func StartServerSide() {
-	if err := keyboard.Open(); err != nil {
-		panic(err)
-	}
-	defer keyboard.Close()
-
-	inputChan := make(chan rune)
-	errChan := make(chan error)
-	go func() {
-		for {
-			ch, _, err := keyboard.GetKey()
-			if err != nil {
-				errChan <- err
-				return
-			}
-			inputChan <- ch
-		}
-	}()
-
 	http.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
+		if r.Method == "POST" {
+			body, err := io.ReadAll(r.Body)
+			if err == nil {
+				fmt.Println("받은 메시지:", string(body))
+				_, _ = w.Write([]byte("O"))
+				close(WaitConnect)
+			} else {
+				_, _ = w.Write([]byte(err.Error()))
+			}
+		} else {
 			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
 		}
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		fmt.Println("받은 메시지:", string(body))
-		_, _ = w.Write([]byte("O"))
-		close(WaitConnect) // 기존 채널 닫기
 	})
 
 	http.HandleFunc("/gaming", func(w http.ResponseWriter, r *http.Request) {
@@ -115,66 +99,65 @@ func StartServerSide() {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
+
 		body, _ := io.ReadAll(r.Body)
-		attackSuccess := false
-		if string(body) != ",,0" {
-			parts := strings.Split(string(body), ",")
-			if len(parts) >= 3 && parts[2] == "1" {
-				attackSuccess = true
-			}
+		var attackSuccess string
+		if string(body) == ",,0" {
+			goto RETURN
 		}
 
 		blockShape.FallingDown()
-		if attackSuccess {
+
+		attackSuccess = strings.Split(string(body), ",")[2]
+
+		if attackSuccess == "1" {
 			blockShape.DeleteFallingBlock()
 		}
-
-		var input rune
-		var gotInput bool
-		timeout := time.After(5 * time.Second)
-
-	WAIT_INPUT:
+		blockShape.PrintArray(blockShape.Ground)
 		for {
+			fmt.Print("서버 입력: ")
+
+			// 5초 타이머 설정
 			select {
-			case ch := <-inputChan:
-				input = ch
-				gotInput = true
-				break WAIT_INPUT
-			case err := <-errChan:
-				fmt.Println("키 입력 에러:", err)
-				break WAIT_INPUT
-			case <-timeout:
-				fmt.Println("입력 시간 초과! 자동 턴 종료")
-				break WAIT_INPUT
+			case err := <-ErrChan:
+				panic(err)
+			case key := <-KeyChan:
+				if key == keyboard.KeyEsc {
+					os.Exit(0)
+				}
+			case ch := <-InputChan:
+				//fmt.Printf("처리되는 키: %c (ASCII: %d)\n", ch, ch) // 디버깅용 로그 추가
+				blockShape.Move(ch)
+				if ch == 'f' {
+					goto RETURN
+				}
+				blockShape.PrintArray(blockShape.Ground)
+			case <-time.After(5 * time.Second):
+				fmt.Println("\n시간 초과!")
+				blockShape.PrintArray(blockShape.Ground)
+				goto RETURN
 			}
-		}
 
-		if gotInput {
-			blockShape.Move(input)
 		}
-
+	RETURN:
 		state := GameState{
 			Ground:       blockShape.Ground,
 			FallingBlock: blockShape.FallingBlock,
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(state); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		data, err := json.Marshal(state)
+		if err != nil {
+			panic(err)
 		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
 		fmt.Println("클라이언트턴 대기중...")
 	})
 
 	http.HandleFunc("/end", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
 		var u user.User
-		err := json.NewDecoder(r.Body).Decode(&u)
+		err := json.NewDecoder(r.Body).Decode(&u) //NewDecoder로 JSON 파일로 읽고 User 타임으로 바꿔주는 엄청난 함수
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest) // 실패;
 			return
 		}
 
@@ -182,19 +165,18 @@ func StartServerSide() {
 		user.Other = u
 
 		j, err := json.Marshal(user.Me)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 
 		w.Write(j)
 		close(WaitEnd)
 	})
 
 	fmt.Println("서버 시작 : 8080 포트")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		panic(err)
-	}
+	go func() {
+		err := http.ListenAndServe(":8080", nil)
+		if err != nil {
+			panic(err)
+		}
+	}()
 }
 
 func ConnectServerSide() (bool, string) {

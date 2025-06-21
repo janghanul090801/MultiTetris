@@ -48,19 +48,19 @@ func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo, 
 			inputTimer.Stop()
 			switch ch {
 			case 'w':
-				if isCanMoveCursor(Ground, -1, 0) {
+				if isCanMoveCursor(Ground, FallingBlock, -1, 0) {
 					cursorX--
 				}
 			case 's':
-				if isCanMoveCursor(Ground, 1, 0) {
+				if isCanMoveCursor(Ground, FallingBlock, 1, 0) {
 					cursorX++
 				}
 			case 'a':
-				if isCanMoveCursor(Ground, 0, -1) {
+				if isCanMoveCursor(Ground, FallingBlock, 0, -1) {
 					cursorY--
 				}
 			case 'd':
-				if isCanMoveCursor(Ground, 0, 1) {
+				if isCanMoveCursor(Ground, FallingBlock, 0, 1) {
 					cursorY++
 				}
 			case 'f':
@@ -73,7 +73,7 @@ func Attack(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo, 
 		}
 	}
 }
-func isCanMoveCursor(Ground [10][10]blockShape.Block, dx, dy int) bool {
+func isCanMoveCursor(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo, dx, dy int) bool {
 	newX := cursorX + dx
 	newY := cursorY + dy
 
@@ -90,12 +90,12 @@ func isCanMoveCursor(Ground [10][10]blockShape.Block, dx, dy int) bool {
 		// 경계 내에 있는 경우에만 체크
 		if checkX >= 0 && checkX < len(Ground) && checkY >= 0 && checkY < len(Ground[0]) {
 			// 블록이 있고 떨어지는 블록이 아닌 경우
-			if Ground[checkX][checkY].Id != 0 && Ground[checkX][checkY].Id != blockShape.FallingBlock.Id {
+			if Ground[checkX][checkY].Id != 0 && Ground[checkX][checkY].Id != FallingBlock.Id {
 				return false
 			}
 		}
 	}
-	return Ground[newX][newY].Id == 0 || Ground[newX][newY].Id == blockShape.FallingBlock.Id
+	return Ground[newX][newY].Id == 0 || Ground[newX][newY].Id == FallingBlock.Id
 }
 func isAttackSuccessful(Ground [10][10]blockShape.Block, FallingBlock blockShape.BlockInfo) (string, bool) {
 	if CheckFallingBlock(cursorX, cursorY, Ground, FallingBlock) {

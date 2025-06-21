@@ -228,7 +228,7 @@ func InitEnv() {
 		{CreateBlock(7)},
 	}
 
-	CreateBlockGroup(4, rand.Intn(6)+1, 't')
+	CreateBlockGroup(rand.Intn(len(Ground)-1), rand.Intn(6)+1, 't')
 }
 
 // 해당 블럭 모양을 만듦
@@ -348,7 +348,7 @@ OUT:
 		}
 	}
 
-	CreateBlockGroup(5, rand.Intn(6)+1, 't')
+	CreateBlockGroup(rand.Intn(len(Ground)-1), rand.Intn(6)+1, 't')
 	CheckLine()
 }
 
@@ -426,7 +426,7 @@ func DeleteFallingBlock() {
 			}
 		}
 	}
-	CreateBlockGroup(5, rand.Intn(6)+1, 't') // FallingBlock 초기화
+	CreateBlockGroup(rand.Intn(len(Ground)-1), rand.Intn(6)+1, 't') // FallingBlock 초기화
 	fmt.Println("공격에 당했습니다!")
 }
 

@@ -138,14 +138,17 @@ func StartServerSide() {
 					os.Exit(0)
 				}
 			case ch := <-inputChan:
+				//fmt.Printf("처리되는 키: %c (ASCII: %d)\n", ch, ch) // 디버깅용 로그 추가
 				blockShape.Move(ch)
 				if ch == 'f' {
-					break
+					goto RETURN
 				}
 				blockShape.PrintArray(blockShape.Ground)
 			case <-time.After(5 * time.Second):
 				fmt.Println("\n시간 초과!")
-				break
+				keyboard.Close()
+				blockShape.PrintArray(blockShape.Ground)
+				goto RETURN
 			}
 
 		}
